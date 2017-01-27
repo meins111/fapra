@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cmath>
 #include <pthread.h>
+#include <cstdlib>
 
 
 using namespace std;
@@ -34,9 +35,16 @@ Widget::Widget(QWidget *parent) :
      QObject::connect(&slave, SIGNAL(pathfindingDone(bool)), this, SLOT(pathfindingDone(bool)));
      QVBoxLayout *layout = dynamic_cast<QVBoxLayout *> (this->layout());
 	 layout->QLayout::addWidget(mapWidget);
-     std::string path = "/home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf";
-     logger->info("Try to load the default osm file: %v ...", path);
-     slave.startParsing(path);
+
+	 string relativePathToHomeDir = getenv("PBFPATH");
+	 std::string path = getenv("HOME");
+	 path += relativePathToHomeDir;
+
+	 if ( relativePathToHomeDir.empty() )
+		 path = "/home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf";
+	  
+	 logger->info("Try to load the default osm file: %v ...", path);
+	 slave.startParsing(path);
 }
 
 Widget::~Widget()
