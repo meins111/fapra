@@ -175,12 +175,11 @@ std::string Widget::getPbfPath() {
 	if( !getenv("PBFPATH") ) {
 
 		path = "/home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf";
-
-	} 
+        return path;
+    }
 
 	path = getenv("HOME");
 	path += getenv("PBFPATH");
-	return path;
 
 	return path;
 }
