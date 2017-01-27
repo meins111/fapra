@@ -1,5 +1,6 @@
 /build-WinNav-Desktop-debug/
 *.o
 /WinNav/logs
+/WinNav/WinNav
 /WinNav/WinNav.pro.user.9c9df16
 moc_*.cpp
