@@ -1,0 +1,3 @@
+[submodule "osmpbf"]
+	path = osmpbf
+	url = https://github.com/inphos42/osmpbf
