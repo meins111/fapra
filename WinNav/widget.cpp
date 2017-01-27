@@ -36,12 +36,8 @@ Widget::Widget(QWidget *parent) :
      QVBoxLayout *layout = dynamic_cast<QVBoxLayout *> (this->layout());
 	 layout->QLayout::addWidget(mapWidget);
 
-	 string relativePathToHomeDir = getenv("PBFPATH");
-	 std::string path = getenv("HOME");
-	 path += relativePathToHomeDir;
+	 string path = this->getPbfPath();
 
-	 if ( relativePathToHomeDir.empty() )
-		 path = "/home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf";
 	  
 	 logger->info("Try to load the default osm file: %v ...", path);
 	 slave.startParsing(path);
@@ -172,5 +168,20 @@ void Widget::pathfindingProgress(int percentProgress){
 
 void Widget::pathfindingDone(bool successFlag) {
     //TODO: Draw the path
+}
+
+std::string Widget::getPbfPath() {
+	std::string path;
+	if( !getenv("PBFPATH") ) {
+
+		path = "/home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf";
+
+	} 
+
+	path = getenv("HOME");
+	path += getenv("PBFPATH");
+	return path;
+
+	return path;
 }
 

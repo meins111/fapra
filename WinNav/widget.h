@@ -58,6 +58,8 @@ private:
     LinearGraph path;
     Slaver slave;
     el::Logger* logger;
+
+	 std::string getPbfPath();
 };
 
 #endif // WIDGET_H
