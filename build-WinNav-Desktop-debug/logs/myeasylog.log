@@ -1,0 +1,93 @@
+2017-01-27 11:49:23,009 INFO  [default] Programm started.
+2017-01-27 11:49:25,731 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 12:18:01,034 INFO  [default] Programm started.
+2017-01-27 12:18:03,769 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 12:18:03,771 INFO  [default] ParsePbfFile...
+2017-01-27 12:18:03,772 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 12:18:24,269 INFO  [default] Programm started.
+2017-01-27 12:18:24,599 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 12:18:24,599 INFO  [default] ParsePbfFile...
+2017-01-27 12:18:24,600 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 12:18:24,600 INFO  [default] Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways
+2017-01-27 12:18:34,739 INFO  [default] Found 75182 highways, 522193 invalid ways and 520269 total nodes.
+2017-01-27 12:18:34,739 INFO  [default] Parse Step 2: Parse NodeStream, collect actual osm-node data of those fetched in step 1.
+
+2017-01-27 12:18:34,742 INFO  [default] Listener: Received Update! Propagating ...
+2017-01-27 12:18:49,864 INFO  [default] Fetched 470645 street nodes, 0 charging stations.
+2017-01-27 12:18:49,864 INFO  [default] Parse Step 3: Build the graph edges from stored way data.
+2017-01-27 12:18:49,864 INFO  [default] Listener: Received Update! Propagating ...
+2017-01-27 13:35:47,025 INFO  [default] Programm started.
+2017-01-27 13:35:50,088 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 13:35:50,093 INFO  [default] ParsePbfFile...
+2017-01-27 13:35:50,094 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 13:35:58,202 INFO  [default] Programm started.
+2017-01-27 13:35:58,546 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 13:35:58,549 INFO  [default] ParsePbfFile...
+2017-01-27 13:35:58,550 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 13:35:58,551 INFO  [default] Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways
+2017-01-27 13:36:09,425 INFO  [default] Found 75182 highways, 522193 invalid ways and 520269 total nodes.
+2017-01-27 13:36:09,425 INFO  [default] Parse Step 2: Parse NodeStream, collect actual osm-node data of those fetched in step 1.
+
+2017-01-27 13:36:09,425 INFO  [default] Parse Step 2: Parse NodeStream, collect actual osm-node data of those fetched in step 1.
+Listener: Received Update! Propagating ...
+2017-01-27 13:36:09,425 INFO  [default] ... signal emitted.
+2017-01-27 13:36:25,462 INFO  [default] Fetched 470645 street nodes, 0 charging stations.
+2017-01-27 13:36:25,462 INFO  [default] Parse Step 3: Build the graph edges from stored way data.
+2017-01-27 13:36:25,463 INFO  [default] Listener: Received Update! Propagating ...
+2017-01-27 13:36:25,463 INFO  [default] ... signal emitted.
+2017-01-27 13:41:07,820 INFO  [default] Programm started.
+2017-01-27 13:41:08,166 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 13:41:08,169 INFO  [default] ParsePbfFile...
+2017-01-27 13:41:08,181 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 13:41:08,181 INFO  [default] Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways
+2017-01-27 13:41:18,694 INFO  [default] Found 75182 highways, 522193 invalid ways and 520269 total nodes.
+2017-01-27 13:41:18,694 INFO  [default] Parse Step 2: Parse NodeStream, collect actual osm-node data of those fetched in step 1.
+
+2017-01-27 13:41:18,694 INFO  [default] Listener: Received Update! Propagating ...
+2017-01-27 13:41:18,694 INFO  [default] ... signal emitted.
+2017-01-27 13:41:34,028 INFO  [default] Fetched 470645 street nodes, 0 charging stations.
+2017-01-27 13:41:34,028 INFO  [default] Parse Step 3: Build the graph edges from stored way data.
+2017-01-27 13:41:34,028 INFO  [default] Listener: Received Update! Propagating ...
+2017-01-27 13:41:34,028 INFO  [default] ... signal emitted.
+2017-01-27 13:48:20,795 INFO  [default] Programm started.
+2017-01-27 13:48:23,479 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 13:48:23,480 INFO  [default] ParsePbfFile...
+2017-01-27 13:48:23,491 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 13:48:25,610 INFO  [default] Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways
+2017-01-27 13:52:04,922 INFO  [default] Programm started.
+2017-01-27 13:52:07,694 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 13:52:07,695 INFO  [default] ParsePbfFile...
+2017-01-27 13:52:07,696 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 14:02:23,844 INFO  [default] Programm started.
+2017-01-27 14:02:26,536 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 14:02:26,538 INFO  [default] ParsePbfFile...
+2017-01-27 14:02:26,540 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 14:02:27,902 INFO  [default] Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways
+2017-01-27 15:17:43,226 INFO  [default] Programm started.
+2017-01-27 15:18:31,190 INFO  [default] Programm started.
+2017-01-27 15:18:53,391 INFO  [default] Programm started.
+2017-01-27 15:19:41,315 INFO  [default] Programm started.
+2017-01-27 15:20:38,960 INFO  [default] Programm started.
+2017-01-27 15:20:59,642 INFO  [default] Programm started.
+2017-01-27 15:28:10,360 INFO  [default] Programm started.
+2017-01-27 15:36:31,779 INFO  [default] Programm started.
+2017-01-27 15:37:08,622 INFO  [default] Programm started.
+2017-01-27 15:53:19,146 INFO  [default] Programm started.
+2017-01-27 15:53:26,620 INFO  [default] Programm started.
+2017-01-27 19:55:37,082 INFO  [default] Programm started.
+2017-01-27 19:55:37,481 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 20:36:27,858 INFO  [default] Programm started.
+2017-01-27 20:36:28,188 INFO  [default] Try to load the default osm file: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf ...
+2017-01-27 20:36:28,190 INFO  [default] ParsePbfFile...
+2017-01-27 20:36:28,193 INFO  [default] Opened OSM-File: /home/jochen/Downloads/stuttgart-regbez-latest.osm.pbf.
+2017-01-27 20:36:28,193 INFO  [default] Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways
+2017-01-27 20:36:38,585 INFO  [default] Found 75182 highways, 522193 invalid ways and 520269 total nodes.
+2017-01-27 20:36:38,586 INFO  [default] Parse Step 2: Parse NodeStream, collect actual osm-node data of those fetched in step 1.
+
+2017-01-27 20:36:38,586 INFO  [default] Parse Step 2: Parse NodeStream, collect actual osm-node data of those fetched in step 1.
+Listener: Received Update! Propagating ...
+2017-01-27 20:36:38,586 INFO  [default] ... signal emitted.
+2017-01-27 20:36:53,840 INFO  [default] Fetched 470645 street nodes, 0 charging stations.
+2017-01-27 20:36:53,840 INFO  [default] Parse Step 3: Build the graph edges from stored way data.
+2017-01-27 20:36:53,840 INFO  [default] Listener: Received Update! Propagating ...
+2017-01-27 20:36:53,840 INFO  [default] ... signal emitted.

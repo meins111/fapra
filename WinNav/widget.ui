@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Widget</class>
+ <widget class="QWidget" name="Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>350</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Widget</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QWidget" name="topWidget" native="true">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="1">
+       <widget class="QTabWidget" name="tabWidget">
+        <property name="currentIndex">
+         <number>2</number>
+        </property>
+        <widget class="QWidget" name="route">
+         <attribute name="title">
+          <string>Route</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0" colspan="2">
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="startLatitude"/>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLineEdit" name="endLatitude"/>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="longitudeLabel">
+              <property name="text">
+               <string>Longitude</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QRadioButton" name="endRadio">
+              <property name="text">
+               <string>End</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="startLongitude"/>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="calculateButton">
+              <property name="text">
+               <string>Route berechnen</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="latitudeLabel">
+              <property name="text">
+               <string>Latitude</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QRadioButton" name="startRadio">
+              <property name="text">
+               <string>Start</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="endLongitude"/>
+            </item>
+            <item row="3" column="0">
+             <widget class="QRadioButton" name="noneRadio">
+              <property name="text">
+               <string>None</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QComboBox" name="movementType">
+              <item>
+               <property name="text">
+                <string>Auto</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Fahrrad</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Fußgänger</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QComboBox" name="optimizeBy">
+              <item>
+               <property name="text">
+                <string>Schnellste</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Kürzeste</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="ecar">
+         <attribute name="title">
+          <string>E-Car</string>
+         </attribute>
+         <widget class="QCheckBox" name="isECar">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Route für E-Car</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="ecarReach">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>50</y>
+            <width>271</width>
+            <height>22</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="ecarReachLabel">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>71</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Reichweite</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="reachUnit">
+          <property name="geometry">
+           <rect>
+            <x>360</x>
+            <y>50</y>
+            <width>72</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>Km</string>
+           </property>
+          </item>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="Settings">
+         <attribute name="title">
+          <string>Change OSM File</string>
+         </attribute>
+         <widget class="QLineEdit" name="filePath">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>321</width>
+            <height>27</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>.../Path to OSM.pbf File</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="loadFile">
+          <property name="geometry">
+           <rect>
+            <x>358</x>
+            <y>30</y>
+            <width>81</width>
+            <height>27</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Parse File</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="statusLabel">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>51</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Status:</string>
+          </property>
+         </widget>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="geometry">
+           <rect>
+            <x>100</x>
+            <y>90</y>
+            <width>118</width>
+            <height>23</height>
+           </rect>
+          </property>
+          <property name="maximum">
+           <number>8</number>
+          </property>
+          <property name="value">
+           <number>0</number>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

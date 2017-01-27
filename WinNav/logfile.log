@@ -1,0 +1,7 @@
+File new opened.
+Startup load the osm file.
+==========================================
+======= New log instance created =========
+==========================================
+[NavGraph::buildFromFile()]
+ERROR: Could not open file: /media/bjn/SWAP1/stuttgart-regbez-latest.osm.pbf
