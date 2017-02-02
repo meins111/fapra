@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include "Utils/easylogging++.h"
 #include "../Utils/inplacevectorreorder.h"
 #include <Utils/condwait_t.h>
@@ -48,6 +49,9 @@ public:
     void setStartRange(const uint8_t range) {startRange=startRange;}
     void routingPriority(bool travelTimePriority) {timeIsPrio=travelTimePriority;}
 
+    //Actual A* algorithm
+    LinearGraph & aStarRouting(const Node &start, const Node &target, const NavGraph &graph);
+
     void reset();
 
 protected:
@@ -69,7 +73,8 @@ protected:
     //Utility method to check the integrity of the stored graph
     bool selfCheck();
 
-    void updateProgress(int currentProgress);
+    //Build the edges of the meta graph: This includes MANY a* runs - depending on the amount of known recharge stations
+    void buildMetaEdges();
 
     //Routing options
     TravelMedium medium;

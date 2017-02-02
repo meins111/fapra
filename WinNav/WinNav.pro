@@ -50,7 +50,8 @@ SOURCES +=        main.cpp\
     #moc_slaver.cpp
     Utils/easylogging++.cc \
     GraphInterface/pointofinterest.cpp \
-    stopworkingexception.cpp
+    stopworkingexception.cpp \
+    Pathfinding/astar.cpp
 
 
 HEADERS  += widget.h\
@@ -82,7 +83,8 @@ HEADERS  += widget.h\
     Utils/condwait_t.h \
     Utils/easylogging++.h \
     GraphInterface/pointofinterest.h \
-    stopworkingexception.h
+    stopworkingexception.h \
+    Pathfinding/astar.h
 
 FORMS    += widget.ui
 

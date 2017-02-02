@@ -35,6 +35,8 @@ public:
     double getTravelTime();
     //Checks a given travelMedium bit mask if this edge allows this mean of travel
     bool checkAllowance (uint8_t travelMedium);
+
+    double getEdgeCost (bool timeIsPrio);
 };
 
 #endif // EDGEINFO_H

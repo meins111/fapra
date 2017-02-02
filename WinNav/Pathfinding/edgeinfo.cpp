@@ -28,3 +28,23 @@ EdgeInfo & EdgeInfo::operator= ( const EdgeInfo & copy) {
     type=copy.type;
     return *this;
 }
+
+
+double EdgeInfo::getEdgeCost (bool timeIsPrio) {
+    if (distance == 0.0) {
+        //invalid edge info
+        return 0xFFFFFFFF;
+    }
+    if (timeIsPrio && speed > 0.0) {
+        //Return travel time on this edge
+        return distance/speed;
+    }
+    else if (timeIsPrio && speed <= 0.0) {
+        //Invalid speed tag
+        return 0xFFFFFFFF;
+    }
+    else {
+        //Return the travel distance
+        return distance;
+    }
+}

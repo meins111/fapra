@@ -16,6 +16,9 @@ public:
     size_t firstEdge;
     size_t lastEdge;
 
+    //Utility method to fetch the number of edges of this node
+    inline size_t numberOfEdges() { return lastEdge-firstEdge; }
+
 
 };
 

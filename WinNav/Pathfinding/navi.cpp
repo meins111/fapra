@@ -1,5 +1,7 @@
 #include "navi.h"
 #include "stopworkingexception.h"
+#include <stdexcept>
+#include <sstream>
 
 //Use EdgeType value of the street as an index toi lookup the default speed limit of the street type
 const uint16_t Navi::speedLookup[]{	//in km/h
@@ -90,7 +92,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                                         });
 
         /** Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways **/
-        logger->info("Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways");
+        logger->info("Parse Step 1: Parse WayStream, collect 'interesting' osm-node-IDs and way infos.");
         uint32_t addWays=0, addNodes=0, invalidWays=0;
         //Loop through all primitve blocks of the file ...
         while (osmFile.parseNextBlock(pbi)) {
@@ -112,57 +114,59 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         footDenied.assignInputAdaptor(&pbi);
                         bikeDenied.assignInputAdaptor(&pbi);
                         carDenied.assignInputAdaptor(&pbi);
-                        //Store the relevant way info for later use
-                        osmWays.emplace_back();
+                        //Is the way of a supported type?
                         const std::string &edgeTypeString = ways.value(highwayFilter.matchingTag());
-                        if(streetTypeLookup.count(edgeTypeString)>0) {
-                            //set OSM street invalidWaystype
-                            osmWays.back().type=streetTypeLookup.at(edgeTypeString);
-                        }
-                        else {
+                        auto streetType = streetTypeLookup.find(edgeTypeString);
+                        if( streetType == streetTypeLookup.end() ) {
                             //Unknown / Invalid way type -> skip
                             ways.next();
                             invalidWays++;
                             continue;
                         }
+                        //Store the relevant way info for later use
+                        osmWays.emplace_back();
+                        //Set the street type
+                        EdgeInfo &info = osmWays.back();
+                        info.type= *streetType;
+                        //Parse the way infos:
                         if (onewayFilter.matches(ways)) {
                             //This is a oneway edge
-                            osmWays.back().isOneWay=true;
+                            info.isOneWay=true;
                         }
                         if (!footDenied.matches(ways)) {
                             //Foot access is NOT forbidden, so set foot allowance mask
-                            osmWays.back().allowance |= ALLOW_FOOT;
+                            info.allowance |= ALLOW_FOOT;
                         }
                         if (!bikeDenied.matches(ways)) {
                             //Bike access is NOT forbidden, so set the bike allowance mask
-                            osmWays.back().allowance |= ALLOW_BIKE;
+                            info.allowance |= ALLOW_BIKE;
                         }
                         if(!carDenied.matches(ways)) {
                             //Car access is NOT forbidden, so set the car allowance mask
-                            osmWays.back().allowance |= ALLOW_CAR;
+                            info.allowance |= ALLOW_CAR;
                         }
                         if (speedFilter.matches(ways)) {
                             //A explicit way speed limit is stated: parse it
-                            osmWays.back().speed=parseOsmSpeedTag(ways.value(speedFilter.matchingTag()));
+                            info.speed=parseOsmSpeedTag(ways.value(speedFilter.matchingTag()));
                         }
                         else {
                             //Else use the default speed limit by way-type
-                            osmWays.back().speed=speedLookup[osmWays.back().type];
+                            info.speed=speedLookup[info.type];
                         }
-                        osmWays.back().isMetaEdge=true;
+                        info.isMetaEdge=true;
 
 
                         //...then add all nodes along the way to the set of navigation nodes and to the stored way
                         osmpbf::IWayStream::RefIterator wayNodesIt(ways.refBegin());
                         osmpbf::IWayStream::RefIterator endIt(ways.refEnd());
-                        addWays++;
+                        ++addWays;
                         while (wayNodesIt!=endIt) {
                             //Store the OSM ID of all 'interesting' nodes in the map, but set the reference to uninitialized
                             osmIdMap[*wayNodesIt]=0xFFFFFFFF;
-                            wayNodesIt++;
-                            addNodes++;
+                            ++wayNodesIt;
+                            ++addNodes;
                             //Store the osm-ID of the node in the subEdge array of the osmWay
-                            osmWays.back().subEdges.emplace_back(*wayNodesIt);
+                            info.subEdges.emplace_back(*wayNodesIt);
                         }
 
                     }
@@ -171,7 +175,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 }
             }
         }
-        logger->info("Found %v highways, %v invalid ways and %v total nodes.", addWays, invalidWays, addNodes);
+        logger->info("Found %v highways, %v invalid/uninteresting ways and %v total nodes.", osmWays.size(), invalidWays, osmIdMap.size());
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
@@ -183,8 +187,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         osmFile.reset();
         size_t navNodes=0, chargeNodes=0;
         //Pre-Allocate  enough space for the number of nodes
-        fullGraph.connectGraph.nodes.reserve(addNodes);
-        fullGraph.nodeInfo.nodeData.reserve(addNodes);
+        fullGraph.connectGraph.nodes.reserve(osmIdMap.size());
+        fullGraph.nodeInfo.nodeData.reserve(osmIdMap.size());
         //Loop through all primitve blocks of the file ...
         while (osmFile.parseNextBlock(pbi)) {
             if (pbi.isNull()) {
@@ -200,23 +204,26 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 while (!nodes.isNull()) {
                     //Fetch all Navigation nodes - those are the nodes whose IDs are stored in the map
                     //Note: Step 1 already ensured that we do not have duplicate nodes
-                    if (osmIdMap.count(nodes.id()) > 0) {
+                    auto it = osmIdMap.find(nodes.id());
+                    if( it != osmIdMap.end() ) {
                         //So the ID of this node is contained in the map, thus an 'interesting' node
                         //Add an uninitialized node entry in the connectivity graph
                         fullGraph.connectGraph.nodes.emplace_back();
                         //And an entry in the nodeInfo vector
                         fullGraph.nodeInfo.nodeData.emplace_back();
                         //Fill in the the info we can get from the OSM-Node
-                        fullGraph.nodeInfo.nodeData.back().longitude = nodes.lond();
-                        fullGraph.nodeInfo.nodeData.back().latitude = nodes.latd();
-                        fullGraph.nodeInfo.nodeData.back().osmID = nodes.id();
+                        NodeInfo &nodeInfo = fullGraph.nodeInfo.nodeData.back();
+                        nodeInfo.longitude = nodes.lond();
+                        nodeInfo.latitude = nodes.latd();
+                        nodeInfo.osmID = nodes.id();
                         //The local ID is the offset of the node inside of the vecor
-                        fullGraph.nodeInfo.nodeData.back().localID = fullGraph.nodeInfo.nodeData.size()-1;
+                        nodeInfo.localID = fullGraph.nodeInfo.nodeData.size()-1;
                         //Update the ID map with the local index of the node
-                        osmIdMap[nodes.id()]=fullGraph.nodeInfo.nodeData.back().localID;
+                        osmIdMap[nodes.id()]=fullGraph.nodeInfo.nodeData.size()-1;
                         if (chargeStationFilter.matches(nodes)) {
                             //maybe this node even is a charge station?
-                            fullGraph.nodeInfo.nodeData.back().isChargeStation = true;
+                            nodeInfo.isChargeStation = true;
+                            chargeNodes++;
                         }
                         //Keep track for statistic reasons
                         navNodes++;
@@ -224,17 +231,19 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                     //Also fetch all nodes marked as charge station nodes to build the e-routing meta graph
                     //wether they are part of the highway network or not
                     //it is assumed that charging_stations always could be reached from the closest naviagtion node for sake of simplicity
-                    else if (chargeStationFilter.matches(nodes)) {
+                    if (chargeStationFilter.matches(nodes)) {
                         //Insert one connection node per charge station
                         metaGraph.connectGraph.nodes.emplace_back();
                         //And one data node
                         metaGraph.nodeInfo.nodeData.emplace_back();
+
+                        NodeInfo &nodeInfo = metaGraph.nodeInfo.nodeData.back();
                         //And edit the stored data
-                        fullGraph.nodeInfo.nodeData.back().longitude = nodes.lond();
-                        fullGraph.nodeInfo.nodeData.back().latitude = nodes.latd();
-                        fullGraph.nodeInfo.nodeData.back().osmID = nodes.id();
-                        fullGraph.nodeInfo.nodeData.back().localID = metaGraph.nodeInfo.nodeData.size()-1;
-                        fullGraph.nodeInfo.nodeData.back().isChargeStation = true;
+                        nodeInfo.longitude = nodes.lond();
+                        nodeInfo.latitude = nodes.latd();
+                        nodeInfo.osmID = nodes.id();
+                        nodeInfo.localID = metaGraph.nodeInfo.nodeData.size()-1;
+                        nodeInfo.isChargeStation = true;
                         chargeNodes++;
                     }
                     nodes.next();
@@ -249,24 +258,52 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 
         /** Parse Step 3: Build graph edges from stored way data **/
         logger->info("Parse Step 3: Build the graph edges from stored way data.");
-        //Allocate memory for the least number of edges for the number of stored nodes: n nodes => >n/2 nodes
-        fullGraph.connectGraph.edges.reserve(addNodes/2);
-        fullGraph.edgeInfo.reserve(addNodes/2);
+        //Allocate memory for the least number of edges for the number of stored nodes: n nodes => >n/2 edges
+        fullGraph.connectGraph.edges.reserve(navNodes*2);
+        fullGraph.edgeInfo.reserve(navNodes*2);
         size_t srcOffset=0xFFFFFFFF, tarOffset=0xFFFFFFFF;
         //For all stored ways...
         for (size_t i=0; i<osmWays.size(); i++) {
+            EdgeInfo &edge = osmWays[i];
             //... walk over all stored osmIDs ...
-            for(size_t j=0;j<osmWays[i].subEdges.size()-1; j++) {
+            for(size_t j=0;j<edge.subEdges.size()-1; j++) {
+                size_t currentNodeId = edge.subEdges[j],
+                        nextNodeId = edge.subEdges[j+1];
+
                 //Check if the nodes are fetched, otherwise something is fishy ...
-                if(osmIdMap.count(osmWays[i].subEdges[j])>0 && osmIdMap.count(osmWays[i].subEdges[j+1])>0) {
-                    //Get the local IDs of those nodes
-                    srcOffset=osmIdMap[osmWays[i].subEdges[j]];
-                    tarOffset=osmIdMap[osmWays[i].subEdges[j+1]];
-                    //And insert a connection from the current node to the next stored node
-                    fullGraph.connectGraph.edges.emplace_back(srcOffset, tarOffset, fullGraph.connectGraph.edges.size()-1);
-                    //Also add the respective edge info using the edge infos parsed in step 1
-                    fullGraph.edgeInfo.emplace_back(osmWays[i]);
-                    //Remove the meta entries in the newly created edge
+                auto currentLocalIdIt = osmIdMap.find(currentNodeId);
+                auto nextLocalIdIt = osmIdMap.find(nextNodeId);
+                if( currentLocalIdIt == osmIdMap.end() ) {
+                    std::stringstream idStream;
+                    idStream << "currentLocalId does not exist for edge " << i << "," << j;
+                    throw std::runtime_exception( idStream.str() );
+                }
+
+                if( nextLocalIdIt == osmIdMap.end() ) {
+                    std::stringstream idStream;
+                    idStream << "nextLocalId does not exist for edge " << i << "," << j;
+                    throw std::runtime_exception( idStream.str() );
+                }
+
+                //Get the local IDs of those nodes
+                srcOffset= *currentLocalIdIt;
+                tarOffset= *nextLocalIdIt;
+                //And insert a connection from the current node to the next stored node
+                fullGraph.connectGraph.edges.emplace_back(srcOffset, tarOffset, fullGraph.connectGraph.edges.size());
+                //Also add the respective edge info using the edge infos parsed in step 1
+                fullGraph.edgeInfo.emplace_back(edge);
+
+                // TODO: Copy construct des vectors nur um ihn dann zu clearen erzeugt viele unnoetige Speicheroperationen.
+                //			Verbessern: Edge erzeugen und copy ohne die subEdges. Am besten als Subfunktion der EdgeInfo
+
+                //Remove the meta entries in the newly created edge
+                fullGraph.edgeInfo.back().isMetaEdge=false;
+                fullGraph.edgeInfo.back().subEdges.clear();
+                //Check if oneway - if not then add the back-edge as well
+                if(!edge.isOneWay) {
+                    //Create back-edge with switched src/tar nodes
+                    fullGraph.connectGraph.edges.emplace_back(tarOffset, srcOffset, fullGraph.connectGraph.edges.size());
+                    fullGraph.edgeInfo.emplace_back(edge);
                     fullGraph.edgeInfo.back().isMetaEdge=false;
                     fullGraph.edgeInfo.back().subEdges.clear();
                 }
@@ -286,15 +323,19 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         //Sort the connect-edges (by source/target nodes)
         std::sort(fullGraph.connectGraph.edges.begin(), fullGraph.connectGraph.edges.end());
         //Build the target-index vector from the old/new indizes of the connect-edges
-        for(size_t i=0; i<fullGraph.connectGraph.edges.size(); i++) {
+        for(size_t i=0,
+            edgeCount = fullGraph.connectGraph.edges.size() ; i < edgeCount ; i++) {
             //Use the old index to conclude where the matching edgeInfo entry has to be moved to
-            indizes[fullGraph.connectGraph.edges[i].index]=i;
+            //indizes[fullGraph.connectGraph.edges[i].index]=i;
+            indizes[i]=fullGraph.connectGraph.edges[i].index;
             //Update the index entry to the new location
             fullGraph.connectGraph.edges[i].index=i;
         }
         //Now that we have build the target-index vector, we can use the inplace-reorder operation to sort the edgeInfo-vector
         //such that the offsets of connectivity edge and edgeInfo-entry do match again
-        reorderVector(fullGraph.edgeInfo, indizes);
+
+        inplaceReorder(fullGraph.edgeInfo, indizes);
+
         //Free the helper vector and the stored osm ways
         indizes.clear();
         osmWays.clear();
@@ -305,15 +346,15 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 
         /** Parse Step 5: Add Node->Edge offsets **/
         logger->info("Parse Step 5: Add Node->Edge offsets.");
-        size_t curSrc=0;
+        size_t curSrc=fullGraph.nodeInfo.nodeData[0].localID;
         fullGraph.connectGraph.nodes[0].firstEdge=0;
         for (size_t i=0; i<fullGraph.connectGraph.edges.size(); i++) {
             if (fullGraph.connectGraph.edges[i].startNode != curSrc) {
                 //We reached the point where the adjacent edges of the next node starts ...
                 //... so set the end of the previous node, and the start of the new
-                fullGraph.connectGraph.nodes[curSrc].lastEdge=i-1;
+                fullGraph.connectGraph.nodes[curSrc].lastEdge=i;
                 fullGraph.connectGraph.nodes[curSrc+1].firstEdge=i;
-                curSrc++;
+                curSrc=fullGraph.nodeInfo.nodeData[i].localID;
             }
             //Else we have nothing to do
         }
@@ -365,7 +406,7 @@ bool Navi::selfCheck() {
            curEdge = & fullGraph.connectGraph.edges[n.firstEdge+j];
            if(curEdge->startNode != i) {
                //An adjacent edge whose start node does not equal the node we are currently checking is INVALID!
-               logger->warn("Edge[%v] BROKEN. Start Node ID %v does not match this node's ID %v.", n.firstEdge, curEdge->startNode, i);
+               logger->warn("Edge[%v] BROKEN. Start Node ID %v does not match this node's ID %v.", n.firstEdge+j, curEdge->startNode, i);
                return false;
            }
            if(curEdge->endNode == 0xFFFFFFFF) {
@@ -389,8 +430,6 @@ bool Navi::selfCheck() {
 LinearGraph & Navi::shortestPath(const Node &start, const Node &target) {
 
 }
-
-
 
 
 double Navi::parseOsmSpeedTag(const std::string & speedTag) {

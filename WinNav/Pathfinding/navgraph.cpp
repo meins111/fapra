@@ -45,3 +45,35 @@ const NodeInfo& NavGraph::getClosestNode (const double &lon, const double &lat) 
 void NavGraph::buildClosenessTree() {
     closenessTree.buildIndex();
 }
+
+const NodeInfo& NavGraph::getAdjacentNode (const size_t curNode, size_t offset) {
+    //The node we are looking at
+    BasicNode &cur = connectGraph.nodes[curNode];
+    //The edge we are interested in
+    BasicEdge &edge =connectGraph.edges[cur.firstEdge+offset];
+    //The adjacent node = the end node of the respective edge
+    return nodeInfo.nodeData[edge.endNode];
+}
+
+const EdgeInfo& NavGraph::getAdjacentEdge (const size_t curNode, size_t offset) {
+    //The node we are looking at
+    BasicNode &cur = connectGraph.nodes[curNode];
+    //The edge we are interested in
+    return edgeInfo[cur.firstEdge+offset];
+}
+
+const size_t NavGraph::getEdgeBetweenNodes (const size_t start, size_t target) {
+    BasicNode startNode = connectGraph.nodes[start];
+    size_t firstEdge = connectGraph.nodes[start].firstEdge;
+    size_t edgeCnt = startNode.numberOfEdges();
+    //Loop over all adjacent edges of the start node ...
+    for (size_t i=firstEdge; i<firstEdge+edgeCnt; i++) {
+        //Check every edge if it connects start and target
+        if (connectGraph.edges[i].endNode == target) {
+            //Found the correct edge: return its offset
+            return i;
+        }
+    }
+    //If we end here, we did not find a connection between start and target: return max value
+    return 0xFFFFFFFF;
+}
