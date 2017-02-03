@@ -8,7 +8,7 @@
 #include "basicgraph.h"
 #include <vector>
 
-class NavGraph : Graph
+class NavGraph : public Graph
 {
 public:
     NavGraph() : closenessTree(2, nodeInfo, nanoflann::KDTreeSingleIndexAdaptorParams(10)) {}

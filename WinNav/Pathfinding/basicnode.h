@@ -17,7 +17,7 @@ public:
     size_t lastEdge;
 
     //Utility method to fetch the number of edges of this node
-    inline size_t numberOfEdges() { return lastEdge-firstEdge; }
+    const inline size_t numberOfEdges() { return this->lastEdge - this->firstEdge; }
 
 
 };
