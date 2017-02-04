@@ -359,14 +359,17 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         size_t curSrc=fullGraph.nodeInfo.nodeData[0].localID;
         fullGraph.connectGraph.nodes[0].firstEdge=0;
         for (size_t i=0; i<fullGraph.connectGraph.edges.size(); i++) {
-            if (fullGraph.connectGraph.edges[i].startNode != curSrc) {
-                //We reached the point where the adjacent edges of the next node starts ...
-                //... so set the end of the previous node, and the start of the new
-                fullGraph.connectGraph.nodes[curSrc].lastEdge=i;
-                fullGraph.connectGraph.nodes[curSrc+1].firstEdge=i;
-                curSrc=fullGraph.nodeInfo.nodeData[i].localID;
+            if (fullGraph.connectGraph.edges[i].startNode == curSrc) {
+                //Still an adjacent edge of our current node, go on
+                continue;
             }
-            //Else we have nothing to do
+            //Now we reached the point where the adjacent edges of the next node starts ...
+            //... so set the end of the current node...
+            fullGraph.connectGraph.nodes[curSrc].lastEdge=i;
+            //... and the start of the next
+            fullGraph.connectGraph.nodes[curSrc+1].firstEdge=i;
+            //... and go on with the next node
+            ++curSrc;
         }
         //At the end, insert the end of the last nodes' edges
         fullGraph.connectGraph.nodes.back().lastEdge=fullGraph.connectGraph.edges.size()-1;

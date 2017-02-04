@@ -53,46 +53,50 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
         }
         return;
     }
+
+    size_t curNodeId = target,
+            predNodeId=0xFFFFFFF;
+    bool done=false;
+    NodeInfo curNode = graph.nodeInfo.nodeData[curNodeId];
+    NodeInfo predNode;
+    //Insert start node
+    route.insertNode(PODNode(curNode.longitude, curNode.latitude));
     //Start == target?
     if(start==target) {
-        //Insert single-point
-        route.insertNode(PODNode(graph.nodeInfo.nodeData[target].longitude, graph.nodeInfo.nodeData[target].latitude));
-        //Signal finish
-        errorCode=0;
-        if (updateStruct) {
-            updateStruct->updateProgress(100);
-        }
-        return;
+        done=true;
     }
 
-    bool done=false;
-    size_t nodes=0;
-    size_t curNode = target;
-    //Insert first node
-    route.insertNode(PODNode(graph.nodeInfo.nodeData[curNode].longitude, graph.nodeInfo.nodeData[curNode].latitude));
-    nodes++;
+    //Node counter, we start with the target node
+    size_t nodes=1;
     while(!done) {
-        //current Target node has a predecessor?
-        if (predecessorMap.count(target)==0) {
+        //current node has a predecessor? Then we are ether done or the map is broken!
+        if (predecessorMap.find(curNodeId)==predecessorMap.end()) {
+            //Are we done? This is: current = start node
+            if (curNodeId == start) {
+                done = true;
+                continue;
+            }
+            //This is not good. We are not yet done but the node has to pred entry
             errorCode=PREDECESSOR_MAP_BROKEN;
             if (updateStruct) {
                 updateStruct->updateProgress(errorCode);
             }
             //Clear broken graph
             route.reset();
+            //and exit
             return;
         }
-        //Fetch pred ID
-        size_t pred=predecessorMap[curNode];
+        //So there is a predecessor!
+        //Fetch its ID
+        predNodeId=predecessorMap[curNodeId];
+        //Fetch the pred Node
+        predNode = graph.nodeInfo.nodeData[predNodeId];
         //Insert the predecessor into the route
-        route.insertNode(PODNode(graph.nodeInfo.nodeData[pred].longitude, graph.nodeInfo.nodeData[pred].latitude));
+        route.insertNode(PODNode(predNode.longitude, predNode.latitude));
         nodes++;
-        //Check if pred = start
-        if (pred == start) {
-            //Finished!
-            done = true;
-        }
-        curNode=pred;
+        //Set cur = pred and continue
+        curNodeId=predNodeId;
+        curNode = predNode;
     }
     //All path nodes added, now construct the edges backwards
     if (updateStruct) {
