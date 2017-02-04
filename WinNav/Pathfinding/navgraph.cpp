@@ -26,7 +26,7 @@ size_t NavGraph::numEdges() {
 }
 
 
-const NodeInfo& NavGraph::getClosestNode (const NodeInfo &curPos) {
+NodeInfo& NavGraph::getClosestNode (const NodeInfo &curPos) {
     size_t closestNodeOffset=0xFFFFFFFF;
     double origin [2] = {curPos.latitude, curPos.latitude};
     double distToClosest=0.0;
@@ -35,7 +35,7 @@ const NodeInfo& NavGraph::getClosestNode (const NodeInfo &curPos) {
     return nodeInfo.nodeData[closestNodeOffset];
 }
 
-const NodeInfo& NavGraph::getClosestNode (const double &lon, const double &lat) {
+NodeInfo& NavGraph::getClosestNode (const double &lon, const double &lat) {
     NodeInfo cur;
     cur.longitude = lon;
     cur.latitude = lat;
@@ -46,7 +46,7 @@ void NavGraph::buildClosenessTree() {
     closenessTree.buildIndex();
 }
 
-const NodeInfo& NavGraph::getAdjacentNode (const size_t curNode, size_t offset) {
+NodeInfo& NavGraph::getAdjacentNode (const size_t curNode, size_t offset) {
     //The node we are looking at
     BasicNode &cur = connectGraph.nodes[curNode];
     //The edge we are interested in
@@ -55,14 +55,14 @@ const NodeInfo& NavGraph::getAdjacentNode (const size_t curNode, size_t offset) 
     return nodeInfo.nodeData[edge.endNode];
 }
 
-const EdgeInfo& NavGraph::getAdjacentEdge (const size_t curNode, size_t offset) {
+EdgeInfo& NavGraph::getAdjacentEdge (const size_t curNode, size_t offset) {
     //The node we are looking at
     BasicNode &cur = connectGraph.nodes[curNode];
     //The edge we are interested in
     return edgeInfo[cur.firstEdge+offset];
 }
 
-const size_t NavGraph::getEdgeBetweenNodes (const size_t start, size_t target) {
+size_t NavGraph::getEdgeBetweenNodes (const size_t start, size_t target) {
     BasicNode startNode = connectGraph.nodes[start];
     size_t firstEdge = connectGraph.nodes[start].firstEdge;
     size_t edgeCnt = startNode.numberOfEdges();

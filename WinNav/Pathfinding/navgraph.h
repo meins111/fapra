@@ -34,16 +34,16 @@ public:
     size_t numEdges();
 
     /* Use this method to get the closest Navigation Node for a arbitrary nodeInfo node */
-    const NodeInfo& getClosestNode (const NodeInfo &curPos);
+    NodeInfo& getClosestNode (const NodeInfo &curPos);
 
     /* Arbitrary node wrapper of the getClosestNode-method */
-    const NodeInfo& getClosestNode (const double &lon, const double &lat);
+    NodeInfo& getClosestNode (const double &lon, const double &lat);
 
-    const NodeInfo& getAdjacentNode (const size_t curNode, size_t offset);
+    NodeInfo& getAdjacentNode (const size_t curNode, size_t offset);
 
-    const EdgeInfo& getAdjacentEdge (const size_t curNode, size_t offset);
+    EdgeInfo& getAdjacentEdge (const size_t curNode, size_t offset);
 
-    const size_t getEdgeBetweenNodes (const size_t start, size_t target);
+    size_t getEdgeBetweenNodes (const size_t start, size_t target);
 
     /* Closeness Tree preparation method: must be called once, before calling getClosestNode methods */
     void buildClosenessTree();
