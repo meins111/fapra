@@ -356,23 +356,32 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 
         /** Parse Step 5: Add Node->Edge offsets **/
         logger->info("Parse Step 5: Add Node->Edge offsets.");
-        size_t curSrc=fullGraph.nodeInfo.nodeData[0].localID;
-        fullGraph.connectGraph.nodes[0].firstEdge=0;
-        for (size_t i=0; i<fullGraph.connectGraph.edges.size(); i++) {
-            if (fullGraph.connectGraph.edges[i].startNode == curSrc) {
+        auto edgeIt = fullGraph.connectGraph.edges.begin();
+        size_t edgeId=0;
+        auto nodeIt = fullGraph.connectGraph.nodes.begin();
+        size_t nodeId=0;
+        nodeIt->firstEdge=0;
+        //Loop over all stored edges ...
+        while (edgeIt != fullGraph.connectGraph.edges.end()) {
+            size_t curEdgeStartId = edgeIt->startNode;
+            if (curEdgeStartId == nodeId) {
                 //Still an adjacent edge of our current node, go on
+                ++edgeId;
+                ++edgeIt;
                 continue;
             }
-            //Now we reached the point where the adjacent edges of the next node starts ...
-            //... so set the end of the current node...
-            fullGraph.connectGraph.nodes[curSrc].lastEdge=i;
-            //... and the start of the next
-            fullGraph.connectGraph.nodes[curSrc+1].firstEdge=i;
-            //... and go on with the next node
-            ++curSrc;
+            //Another start node, so enter the end node offset
+            nodeIt->lastEdge=edgeId;
+            //We'll observe the next node
+            ++nodeIt;
+            ++nodeId;
+            //set the firstEdge of this new node to the current edge id
+            nodeIt->firstEdge=edgeId;
+            //NOTE: we do NOT increment the edge iterator in this case
+            //this will help with the correct detection of nodes without outgoing edges!
         }
         //At the end, insert the end of the last nodes' edges
-        fullGraph.connectGraph.nodes.back().lastEdge=fullGraph.connectGraph.edges.size()-1;
+        nodeIt->lastEdge = fullGraph.connectGraph.edges.size()-1;
 
 
         /** Test the Graph for errors **/
@@ -385,11 +394,13 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 throw(std::runtime_error("Self Check of parsed Graph failed!"));
             }
         }
-        logger->info("Self Check successful!");
+        else {
+            logger->info("Self Check successful!");
 
-        //Update progress if a updateStruct is provided
-        if ( updateStruct )
-            updateStruct->updateProgress( 100 );
+            //Update progress if a updateStruct is provided
+            if ( updateStruct )
+                updateStruct->updateProgress( 100 );
+        }
 
     } catch(StopWorkingException e) {
         logger->info("Process was aborted");
@@ -397,42 +408,58 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 }
 
 bool Navi::selfCheck() {
+    //Setup the logger
     el::Logger* logger = el::Loggers::getLogger("default");
-    //check existence of all nodes/edges
-    uint32_t nc = fullGraph.connectGraph.nodes.size();
-    uint32_t ec = fullGraph.connectGraph.edges.size();
-    logger->info("Starting self check of parsed graph ...");
-    for(uint32_t i=0; i < nc; i++) {
-        const BasicNode n = fullGraph.connectGraph.nodes[i];
-        if (n.firstEdge == 0xFFFFFFFF || n.lastEdge == 0xFFFFFFFF) {
-            logger->warn("Node[%v] BROKEN. Uninitialized or half initialized: First=%v, Last=%v", i, n.firstEdge, n.lastEdge);
+    logger->info("Checking the graph now ...");
+    //Get length informations
+    size_t nodeCount = fullGraph.connectGraph.nodes.size();
+    size_t edgeCount = fullGraph.connectGraph.edges.size();
+    //Loop over all nodes
+    for (size_t i=0; i<nodeCount; i++) {
+        //Fetch the current node
+        BasicNode &curNode=fullGraph.connectGraph.nodes[i];
+        //Check if the node is fully initialized
+        if (curNode.firstEdge == 0xFFFFFFFF ||
+                curNode.lastEdge == 0xFFFFFFFF) {
+            logger->error("Node[%v]: BROKEN. Uninitialized or half initialized: FirstEdge=%v, LastEdge=%v",
+                          i, curNode.firstEdge, curNode.lastEdge);
             return false;
         }
-        else if (n.firstEdge >= ec || n.lastEdge < n.firstEdge) {
-            logger->warn("Node[%v] BROKEN. Offset out of bounds: First=%v, Last=%v.");
+        //Check if inserted Edge offsets are out-of-bounds or invalid
+        if (curNode.firstEdge >= edgeCount ||
+                curNode.lastEdge >= edgeCount ||
+                curNode.lastEdge < curNode.firstEdge) {
+            logger->error("Node[%v]: Edge Offset Informations BROKEN. FirstEdge=%v, LastEdge=%v",
+                          i, curNode.firstEdge, curNode.lastEdge);
             return false;
         }
-       //Know check adjacent edges of this node for validness
-       size_t edgeCnt=n.lastEdge-n.firstEdge;
-       BasicEdge *curEdge=NULL;
-       for (size_t j=0; j<edgeCnt; j++) {
-           curEdge = & fullGraph.connectGraph.edges[n.firstEdge+j];
-           if(curEdge->startNode != i) {
-               //An adjacent edge whose start node does not equal the node we are currently checking is INVALID!
-               logger->warn("Edge[%v] BROKEN. Start Node ID %v does not match this node's ID %v.", n.firstEdge+j, curEdge->startNode, i);
-               return false;
-           }
-           if(curEdge->endNode == 0xFFFFFFFF) {
-               //Uniinitialized Target Offset!
-               logger->warn("Edge[%v] BORKEN. End Offset uninitialized!", n.firstEdge+j);
-               return false;
-           }
-           else if (curEdge->endNode >= fullGraph.connectGraph.edges.size()) {
-               //Index out of bounds error!
-               logger->warn("Edge[%v] BROKEN. End Offset out of bounds.", n.firstEdge+j);
-               return false;
-           }
-       }
+        //Now loop over all its associated edges and check them for errors
+        size_t adjacentEdgeCnt = curNode.numberOfEdges();
+        for (size_t j=0; j<adjacentEdgeCnt; j++) {
+            //Get the current edge we are looking at
+            BasicEdge &curEdge = fullGraph.connectGraph.edges[curNode.firstEdge+j];
+            //Check if the edges are initialized
+            if (curEdge.startNode == 0xFFFFFFFF ||
+                    curEdge.endNode == 0xFFFFFFFF) {
+                logger->error("Edge[%v] of Node [%v] (Edge-ID[%v]) BROKEN. Uninitialized or half initialized: StartNode=%v, EndEdge=%v",
+                              j, i, curEdge.index, curEdge.startNode, curEdge.endNode);
+                return false;
+            }
+            //Check if the edges are within the index bounds
+            if (curEdge.startNode >= nodeCount ||
+                    curEdge.endNode >= nodeCount) {
+                logger->error("Edge[%v] of Node [%v] (Edge-ID[%v]) BROKEN. Index out of bounds! StartNode=%v, EndEdge=%v",
+                              j, i, curEdge.index, curEdge.startNode, curEdge.endNode);
+                return false;
+            }
+            //Check its start node offset: it must equal the id of the current node!
+            if (curEdge.startNode != i) {
+                logger->error("Edge[%v] of Node [%v] (Edge-ID[%v]) BROKEN. startNode[%v] does not match nodeID!",
+                              j, i, curEdge.index, curEdge.startNode);
+                return false;
+            }
+        }
+
     }
     //Seems alright!
     logger->info("Seems alright!\n");

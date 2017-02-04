@@ -45,6 +45,7 @@ public:
 
     size_t getEdgeBetweenNodes (const size_t start, size_t target);
 
+
     /* Closeness Tree preparation method: must be called once, before calling getClosestNode methods */
     void buildClosenessTree();
 
