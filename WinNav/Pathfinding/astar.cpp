@@ -24,7 +24,7 @@ void AStar::setMedium (TravelMedium medium) {
     return;
 }
 
-void AStar::updateProgress(const OpenNode_t &cur, size_t start, size_t target, CondWait_t *updateStruct) {
+void AStar::calculateProgress(const OpenNode_t &cur, size_t start, size_t target, CondWait_t *updateStruct) {
     if (!updateStruct) {
         //No update struct set => no update possible
         return;
@@ -149,8 +149,14 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
 
     //We will continue to search until we run out of unexpanded nodes
     while (!openSet.empty()) {
-        //Fetch&remove the most promising node
+        //Fetch the most promising node
         OpenNode_t current = prioQueue.top();
+        //And remove it - as we only have to expand each node once
+        prioQueue.pop();
+        openSet.erase(current.id);
+        //Add its node ID to closed set
+        closedSet.emplace (current.id);
+
         //Is this the target node?
         if (current.id == target) {
             errorCode=0;
@@ -160,10 +166,9 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             //TODO: send update progress
             return;
         }
-        //Update progress
 
-        //Add node ID to closed set
-        closedSet.emplace (current.id);
+        //Send a progress notification
+        calculateProgress(current, start, target, condStruct);
         size_t adjacentCnt = graph.connectGraph.nodes[current.id].numberOfEdges();
         //Check all adjacent nodes of the expanded node
         for (size_t i=0; i<adjacentCnt; i++) {
@@ -176,7 +181,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             }
             EdgeInfo &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
             //Fetch the actual cost to reach the adjacent node from the current node
-            double curCost = current.gScore + adjacentEdge.getEdgeCost(timeIsPrio);
+            double curCost = current.gScore + adjacentEdge.getEdgeCost(timeIsPrio, curMaxSpeed);
             //Is the adjacent node already know with a cost lower or equal than this one?
             if (openSet.find(adjacentNode.localID) != openSet.end()){
                     //openSet[adjacentNode.localID].gScore <= curCost)
@@ -189,8 +194,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 //Node is unknown: create entries in: openlist, predecessor map and prioQueue
                 predecessorMap[adjacentNode.localID]=current.id;
                 Handle_Type_t handle = prioQueue.emplace(adjacentNode.localID,
-                                                                                    h(adjacentNode.localID, target),
-                                                                                    curCost);
+                                                          h(adjacentNode.localID, target), curCost);
                 openSet.emplace(adjacentNode.localID, handle);
                 continue;
             }

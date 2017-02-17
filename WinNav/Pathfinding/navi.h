@@ -17,6 +17,7 @@
 #include "../Utils/inplacevectorreorder.h"
 #include <Utils/condwait_t.h>
 #include <TestGraph/lineargraph.h>
+#include "astar.h"
 //osmpbf includes
 #include <osmpbf/parsehelpers.h>
 #include <osmpbf/filter.h>
@@ -36,25 +37,26 @@
 class Navi
 {
 public:
-    Navi() : medium(CAR), timeIsPrio(true), maxRange(0), startRange(0){}
+    Navi() : medium(CAR), timeIsPrio(true), maxRange(0), startRange(0), fullGraph(), pathfinder(fullGraph){}
 
     //void parsePbfFile(const std::string &path);
     void parsePbfFile(const std::string &path, CondWait_t *updateStruct);
 
-    //Idee: unique pointer auf graph als rückgabe
-    LinearGraph & shortestPath(const Node &start, const Node &target);
+    //Actual Routing from a start node to a target node
+    void shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct);
 
-    void setTravelMedium (const TravelMedium medium) {this->medium=medium;}
-    void setMaxRange(const size_t range) {maxRange=range;}
-    void setStartRange(const uint8_t range) {startRange=startRange;}
-    void routingPriority(bool travelTimePriority) {timeIsPrio=travelTimePriority;}
+    void setTravelMedium (const TravelMedium medium);
+    void setMaxRange(const size_t range);
+    void setStartRange(const uint8_t range);
+    void setRoutingPriority(bool travelTimePriority);
 
-    //Actual A* algorithm
-    LinearGraph & aStarRouting(const Node &start, const Node &target, const NavGraph &graph);
 
     void reset();
 
 protected:
+    //The actual pathfinding implementation
+    AStar pathfinder;
+
     //The full street network: not meta-edges allowed
     NavGraph fullGraph;
 

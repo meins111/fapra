@@ -30,6 +30,39 @@ void Slaver::startParsing(std::string &filePath) {
 }
 
 void Slaver::startPathfinding() {
+    //Check if start/target nodes are set
+    if (!startNodeSet) {
+        //Emit an error
+        emit (pathfindingDone(STARTNODE_NOT_SET));
+        return;
+    }
+    if (!targetNodeSet) {
+        //emit an error
+        emit (pathfindingDone(TARGETNODE_NOT_SET));
+        return;
+    }
+    //Make sure no worker is currently running (signal him to stop if one is running)
+    stopWorker();
+    //Stop and restart the listener such that he listens for the upcoming pathfinding
+    stopListener();
+    //Lock the struct (just to be sure, in fact it should not be a problem at all, since both threads are stopped by now)
+    std::unique_lock<std::mutex>uLock(condStruct.mtx);
+    //We are pathfinding now, not parsing
+    parseFlag=false;
+    //Reset condStruct values
+    condStruct.progress=0;
+    condStruct.stopListening=false;
+    condStruct.stopWorking=false;
+    //All changes are set, free the lock
+    uLock.unlock();
+    //And restart the listener
+    restartListener();
+
+    //Now start the pathfinding-worker thread
+    worker=std::thread(&Navi::shortestPath, navi, startNode, targetNode, &condStruct);
+
+
+
 
 }
 
@@ -69,11 +102,11 @@ void Slaver::listenAndPropagate() {
         }
         else if (parseFlag && condStruct.progress==100) {
             //Parsing done, omit a parse done signal
-            emit (parsingDone(true));
+            emit (parsingDone(100));
         }
         else if (parseFlag && condStruct.progress>100) {
             //This means, that the parsing failed! Emit a done(false) signal
-            emit(parsingDone(false));
+            emit(parsingDone(condStruct.progress));
         }
         else if (!parseFlag && condStruct.progress < 100) {
             //Emit pathfinding update signal
@@ -81,11 +114,11 @@ void Slaver::listenAndPropagate() {
         }
         else if (!parseFlag && condStruct.progress==100) {
             //Emit pathfinding done signal
-            emit(pathfindingDone(true));
+            emit(pathfindingDone(100));
         }
         else if (!parseFlag && condStruct.progress>100) {
             //This means the pathfinding has failed! Emit a done(false) signal
-            emit(pathfindingDone(false));
+            emit(pathfindingDone(condStruct.progress));
         }
         //Update the progress variable
         oldProgress=condStruct.progress;
@@ -96,11 +129,18 @@ void Slaver::listenAndPropagate() {
 
 void Slaver::stopListener() {
     std::unique_lock<std::mutex> uLock(condStruct.mtx);
+    //Is the listener running at all?
+    if(!listener.joinable()) {
+        //No listener currently running, so just exit!
+        return;
+    }
     condStruct.stopListening=true;
     //Make a change to the update variable, such that the listener will wake up and see the stop-Signal
     condStruct.progress++;
     //Then send the wakeup call to the listener
     condStruct.cond.notify_all();
+    //Free the lock and wait for the listener to shut down
+    uLock.unlock();
     //Now wait until the listener joins
     listener.join();
     return;
@@ -108,15 +148,47 @@ void Slaver::stopListener() {
 
 void Slaver::stopWorker() {
     std::unique_lock<std::mutex> uLock(condStruct.mtx);
-    //Set the stop flag
+    //Is a worker running at all?
+    if (!worker.joinable()) {
+        //No worker running, so just exit!
+        return;
+    }
+    //Else we have to signal the worker to stop: Set the stop flag
     condStruct.stopWorking=true;
-    //Maybe he is sleeping?
+    //Maybe he is sleeping? Notify him!
     condStruct.cond.notify_all();
+    //Free the lock and wait for the worker to shut down
+    uLock.unlock();
     //Then wait for it to end in a secure state
     worker.join();
     return;
 }
 
+void Slaver::setStart(PODNode start) {
+    startNode=start;
+    startNodeSet=true;
+}
+
+void Slaver::setTarget(PODNode target) {
+    targetNode=target;
+    targetNodeSet=true;
+}
+
+/*
+void Slaver::setTravelMedium(TravelMedium medium) {
+    navi->setTravelMedium(medium);
+}
+
+void Slaver::setRoutingPriority (bool timeIsPrio) {
+    navi->setRoutingPriority(timeIsPrio);
+}
+
+
+
+void Slaver::setRange(double maxRange) {
+    navi->setMaxRange(maxRange);
+}
+*/
 
 Slaver::~Slaver() {
     //We want to make sure that all threads have stopped, so send stop signals to them!

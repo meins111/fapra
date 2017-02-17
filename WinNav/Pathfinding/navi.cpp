@@ -352,7 +352,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
-            updateStruct->updateProgress( 90 );
+            updateStruct->updateProgress( 85 );
 
         /** Parse Step 5: Add Node->Edge offsets **/
         logger->info("Parse Step 5: Add Node->Edge offsets.");
@@ -382,6 +382,16 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         }
         //At the end, insert the end of the last nodes' edges
         nodeIt->lastEdge = fullGraph.connectGraph.edges.size()-1;
+        //Update progress if a updateStruct is provided
+        if ( updateStruct )
+            updateStruct->updateProgress( 90 );
+
+        /** Parse Step 6: Build up the closeness tree **/
+        fullGraph.closenessTree.buildIndex();
+        metaGraph.closenessTree.buildIndex();
+        //Update progress if a updateStruct is provided
+        if ( updateStruct )
+            updateStruct->updateProgress( 95 );
 
 
         /** Test the Graph for errors **/
@@ -467,8 +477,14 @@ bool Navi::selfCheck() {
 }
 
 
-LinearGraph & Navi::shortestPath(const Node &start, const Node &target) {
-
+void Navi::shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct) {
+    //Find the closest nav node for start and target nodes
+    NodeInfo startNode = fullGraph.getClosestNode(start.getLongitude(), start.getLatitude());
+    NodeInfo targetNode = fullGraph.getClosestNode(target.getLongitude(), target.getLatitude());
+    ///NOTE: This is only the most simplest case
+    /// TODO: Rethink strategy for E-Routing case
+    //Redirect call to AStar
+    pathfinder.findRoute(startNode.localID, targetNode.localID, updateStruct);
 }
 
 
@@ -511,6 +527,26 @@ double Navi::parseOsmSpeedTag(const std::string & speedTag) {
         speed = 0.0;
     }
     return speed;
+}
+
+void Navi::setTravelMedium (const TravelMedium medium) {
+    this->medium=medium;
+    pathfinder.setMedium(medium);
+}
+
+void Navi::setMaxRange(const size_t range) {
+    this->maxRange=range;
+    pathfinder.setMaxDistance(range);
+}
+
+void Navi::setStartRange(const uint8_t range) {
+    this->startRange=range;
+    ///TODO: add a* start range if time is left!
+}
+
+void Navi::setRoutingPriority(bool travelTimePriority) {
+    this->timeIsPrio=travelTimePriority;
+    pathfinder.setRoutingPrio(travelTimePriority);
 }
 
 void Navi::reset() {

@@ -30,13 +30,20 @@ EdgeInfo & EdgeInfo::operator= ( const EdgeInfo & copy) {
 }
 
 
-double EdgeInfo::getEdgeCost (bool timeIsPrio) {
+double EdgeInfo::getEdgeCost (bool timeIsPrio, const double &mediumMaxSpeed) {
     if (distance == 0.0) {
         //invalid edge info
         return 0xFFFFFFFF;
     }
-    if (timeIsPrio && speed > 0.0) {
-        //Return travel time on this edge
+    double curSpeed=speed;
+    //If a medium max speed is set, we'll take the lower of the medium max speed
+    // and the allowed speed of this edge for the actual speed for the calculation
+    //NOTE: This is important to make sure the cost for an edge are not cheaper than possible
+    if(mediumMaxSpeed>0.0) {
+        curSpeed = std::min<double> (mediumMaxSpeed, this->speed);
+    }
+    //Calculate the cost according to the priority selection
+    if (timeIsPrio && curSpeed > 0.0) {
         return distance/speed;
     }
     else if (timeIsPrio && speed <= 0.0) {

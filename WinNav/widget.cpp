@@ -18,6 +18,15 @@ Widget::Widget(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->topWidget->setFixedHeight(200);
+    //Progress bar and labels setup
+    ui->progressBar->setMinimum(0);
+    ui->progressBar->setMaximum(100);
+    ui->progressBar->setValue(0);
+    ui->routingProgressBar->setMinimum(0);
+    ui->routingProgressBar->setMaximum(100);
+    ui->sucessFailureLabel->setText("");
+    ui->messageLabel->setText("");
+
 	 mapWidget = new MapWidget(this);
 
     mapWidget->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
@@ -30,16 +39,16 @@ Widget::Widget(QWidget *parent) :
      QObject::connect( ui->calculateButton, &::QPushButton::clicked, this, &Widget::startRouting );
      QObject::connect(ui->loadFile, &::QPushButton::clicked, this, &Widget::loadPushed);
      QObject::connect(&slave, SIGNAL (parseProgress(int)), this, SLOT(parseProgress(int)));
-     QObject::connect(&slave, SIGNAL(parsingDone(bool)), this, SLOT(parsingDone(bool)));
+     QObject::connect(&slave, SIGNAL(parsingDone(int)), this, SLOT(parsingDone(int)));
      QObject::connect(&slave, SIGNAL(pathfindingProgress(int)), this, SLOT(pathfindingProgress(int)));
-     QObject::connect(&slave, SIGNAL(pathfindingDone(bool)), this, SLOT(pathfindingDone(bool)));
+     QObject::connect(&slave, SIGNAL(pathfindingDone(int)), this, SLOT(pathfindingDone(int)));
      QVBoxLayout *layout = dynamic_cast<QVBoxLayout *> (this->layout());
 	 layout->QLayout::addWidget(mapWidget);
 
 	 string path = this->getPbfPath();
 
-	  
 	 logger->info("Try to load the default osm file: %v ...", path);
+     ui->messageLabel->setText("Parsing...");
 	 slave.startParsing(path);
 }
 
@@ -76,6 +85,9 @@ void Widget::mouseClickGeoPosition(qreal lon, qreal lat, Marble::GeoDataCoordina
 void Widget::startRouting() {
     //Reset the route
     path.reset();
+    //Reset gui progress indicators
+    ui->routingProgressBar->setValue(0);
+    ui->sucessFailureLabel->setText("Routing...");
 //void Widget::on_pushButton_clicked(){
 	switch( ui->movementType->currentIndex() ) {
 		default:
@@ -93,10 +105,10 @@ void Widget::startRouting() {
 	switch( ui->optimizeBy->currentIndex() ) {
 		default:
 		case OPTIMIZE_FASTEST:
-            navi.routingPriority(true);
+            navi.setRoutingPriority(true);
 			break;
 		case OPTIMIZE_SHORTEST:
-            navi.routingPriority(false);
+            navi.setRoutingPriority(false);
 			break;
 	}
 
@@ -117,7 +129,7 @@ void Widget::startRouting() {
     //mapWidget->update();
 
     //Fetch start/end coords
-        //Set english decimal dot as forced locale for deciaml dot
+    //Set english decimal dot as forced locale for deciaml dot
     std::setlocale(LC_NUMERIC, "en_US.UTF-8");
     double startLon, startLat, endLat, endLon;
     std::string tmp = ui->startLongitude->text().toStdString();
@@ -127,22 +139,11 @@ void Widget::startRouting() {
     endLat = atof(ui->endLatitude->text().toStdString().c_str());
     PODNode start(startLon, startLat);
     PODNode target(endLon, endLat);
-    try {
-        printf("Start A* ...\n");
-        //route=navi.shortestPath(start, target);
-        printf(" ... A* finished!\n");
-
-        //Draw it
-        mapWidget->getGraphLayer().setGraph(path);
-        mapWidget->update();
-        //Zoom to the start node
-        mapWidget->setCenterLatitude(path.getNode(0).getLatitude());
-        mapWidget->setCenterLongitude(path.getNode(0).getLongitude());
-    }
-    catch (...) {
-        //Could not find a valid path or parsing failed / was not done
-        printf("A*-Exception");
-    }
+    slave.setStart(start);
+    slave.setTarget(target);
+    //Let the Slaver start the pathfinding
+    logger->info("Start Pathfinding from (%v :: %v) to (%v :: %v)!", startLon, startLat, endLon, endLat);
+    slave.startPathfinding();
 }
 
 
@@ -155,19 +156,67 @@ void Widget::loadPushed() {
 
 
 void Widget::parseProgress(int percentProgress) {
-    //TODO: Update the progrss bar if any
+    if (percentProgress>100 || percentProgress<0) {
+        //Redirect to error handling
+        parsingDone(percentProgress);
+        return;
+    }
+    //Else we just update the progess
+    ui->progressBar->setValue(percentProgress);
+    return;
 }
 
-void Widget::parsingDone(bool successFlag) {
-    //Todo: toggle some indicator to show that processing has completed
+void Widget::parsingDone(int returnCode) {
+    //Check for errors
+    if (returnCode>100 || returnCode<0) {
+        ui->progressBar->setValue(0);
+        QString errMsg = "FAILED with Error-Code: ";
+        errMsg.append(returnCode);
+        ui->messageLabel->setText(errMsg);
+        return;
+    }
+    //Else set the progress to 100 and set success label message
+    ui->progressBar->setValue(100);
+    ui->messageLabel->setText("Done!");
+    return;
 }
 
 void Widget::pathfindingProgress(int percentProgress){
     //TODO: update the progress bar if any
+    if (percentProgress>100 || percentProgress<0) {
+        //Redirect to error handling
+        pathfindingDone(percentProgress);
+        return;
+    }
+    //Else we just update the progess
+    ui->routingProgressBar->setValue(percentProgress);
+    return;
 }
 
-void Widget::pathfindingDone(bool successFlag) {
-    //TODO: Draw the path
+void Widget::pathfindingDone(int returnCode) {
+    //Update the gui progress elements according to outcome of the operation
+    //Check for errors
+    if (returnCode>100 || returnCode<0) {
+        ui->routingProgressBar->setValue(0);
+        QString errMsg = "FAILED with Error-Code: ";
+        errMsg.append(returnCode);
+        ui->sucessFailureLabel->setText(errMsg);
+    }
+    //Else set the progress to 100 and set success label message
+    else {
+        ui->progressBar->setValue(100);
+        ui->sucessFailureLabel->setText("SUCCESS!");
+    }
+
+    //TODO: Get and draw the path if successful
+    /*
+    //Draw it
+    mapWidget->getGraphLayer().setGraph(path);
+    mapWidget->update();
+    //Zoom to the start node
+    mapWidget->setCenterLatitude(path.getNode(0).getLatitude());
+    mapWidget->setCenterLongitude(path.getNode(0).getLongitude());
+    */
 }
 
 std::string Widget::getPbfPath() {

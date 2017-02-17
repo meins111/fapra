@@ -18,8 +18,8 @@ public:
 	void set(double lon, double lat);
 	void setLatitude(double lat);
 	void setLongitude(double lon);
-	virtual double getLongitude();
-	virtual double getLatitude();
+    virtual double getLongitude();
+    virtual double getLatitude();
 };
 
 #endif

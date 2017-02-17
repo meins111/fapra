@@ -46,10 +46,10 @@ public slots:
     //void on_pushButton_clicked();
 
     void parseProgress(int percentProgress);
-    void parsingDone(bool successFlag);
+    void parsingDone(int returnCode);
 
     void pathfindingProgress(int percentProgress);
-    void pathfindingDone(bool successFlag);
+    void pathfindingDone(int returnCode);
 
 private:
     Ui::Widget *ui;

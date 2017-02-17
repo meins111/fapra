@@ -7,6 +7,7 @@
 #include <thread>
 #include "Utils/condwait_t.h"
 #include "logwriter.h"
+#include "Utils/ErrorCodes.h"
 
 
 class Slaver : public QObject
@@ -14,13 +15,23 @@ class Slaver : public QObject
     Q_OBJECT
 public:
     ~Slaver();
-    Slaver(Navi *navi, LinearGraph &path, QObject *parent) : QObject(parent), logger(el::Loggers::getLogger("default")), path(path),
-        navi(navi), parseFlag(true), listener(&Slaver::listenAndPropagate, this){}
+    Slaver(Navi *navi, LinearGraph &path, QObject *parent) : QObject(parent), navi(navi), path(path), parseFlag(true),
+        listener(&Slaver::listenAndPropagate, this), logger(el::Loggers::getLogger("default")),
+            startNodeSet(false), targetNodeSet(false){}
     void startParsing(std::string &filePath);
     void startPathfinding();    //NYI!!
     void stopListener();
     void restartListener();
     void stopWorker();
+
+    void setStart(PODNode start);
+    void setTarget(PODNode target);
+    /*
+    //Setter for pathfinding settings
+    void setTravelMedium(TravelMedium medium);
+    void setRoutingPriority (bool timeIsPrio);
+    void setRange(double maxRange);
+    */
 
 protected:
     Navi *navi;
@@ -36,12 +47,16 @@ protected:
 
     void listenAndPropagate();
 
+    //Local copy of the start/target nodes
+    PODNode startNode, targetNode;
+    bool startNodeSet, targetNodeSet;
+
 signals:
     void parseProgress(int percentProgress);
-    void parsingDone(bool successFlag);
+    void parsingDone(int successFlag);
 
     void pathfindingProgress(int percentProgress);
-    void pathfindingDone(bool successFlag);
+    void pathfindingDone(int successFlag);
 
 };
 

@@ -18,5 +18,4 @@ public:
 	virtual Edge &getEdge(size_t index);
 	virtual size_t numEdges();
 };
-
 #endif

@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "Utils/condwait_t.h"
+#include "Utils/easylogging++.h"
 #include "allowancemasks.h"
 #include <cmath>
 
@@ -54,6 +55,8 @@ class AStar
 public:
     AStar(NavGraph &navGraph);
 
+    //NOTE: currently emitted progress/errorCodes will directly go to the gui, which may not be wanted if
+    //the current routing task has to run multiple a* runs ... will confuse programm & user!
     void findRoute (const size_t&start, const size_t &target, CondWait_t *condStruct);
 
     LinearGraph getRoute() { return route; }
@@ -110,7 +113,7 @@ private:
     double h(const size_t &n1, const size_t &n2);
 
     //Utility method to update the progress
-    void updateProgress(const OpenNode_t &cur, size_t start, size_t target, CondWait_t *updateStruct);
+    void calculateProgress(const OpenNode_t &cur, size_t start, size_t target, CondWait_t *updateStruct);
 
     //Utility method to construct the final path after the routing was successful
     void constructPath (size_t start, size_t target, CondWait_t *updateStruct);

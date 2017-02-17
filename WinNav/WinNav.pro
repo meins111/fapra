@@ -84,7 +84,8 @@ HEADERS  += widget.h\
     Utils/easylogging++.h \
     GraphInterface/pointofinterest.h \
     stopworkingexception.h \
-    Pathfinding/astar.h
+    Pathfinding/astar.h \
+    Utils/ErrorCodes.h
 
 FORMS    += widget.ui
 

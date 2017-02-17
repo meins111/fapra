@@ -36,7 +36,7 @@ public:
     //Checks a given travelMedium bit mask if this edge allows this mean of travel
     bool checkAllowance (uint8_t travelMedium);
 
-    double getEdgeCost (bool timeIsPrio);
+    double getEdgeCost (bool timeIsPrio, const double &mediumMaxSpeed);
 };
 
 #endif // EDGEINFO_H

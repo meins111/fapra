@@ -38,18 +38,20 @@ public:
     QWidget *route;
     QGridLayout *gridLayout_3;
     QGridLayout *gridLayout;
-    QLineEdit *startLatitude;
-    QLineEdit *endLatitude;
-    QLabel *longitudeLabel;
-    QRadioButton *endRadio;
-    QLineEdit *startLongitude;
-    QPushButton *calculateButton;
-    QLabel *latitudeLabel;
-    QRadioButton *startRadio;
     QLineEdit *endLongitude;
-    QRadioButton *noneRadio;
     QComboBox *movementType;
+    QLineEdit *startLatitude;
+    QLineEdit *startLongitude;
+    QLineEdit *endLatitude;
+    QRadioButton *startRadio;
     QComboBox *optimizeBy;
+    QRadioButton *noneRadio;
+    QRadioButton *endRadio;
+    QLabel *sucessFailureLabel;
+    QLabel *longitudeLabel;
+    QLabel *latitudeLabel;
+    QPushButton *calculateButton;
+    QProgressBar *routingProgressBar;
     QWidget *ecar;
     QCheckBox *isECar;
     QLineEdit *ecarReach;
@@ -60,12 +62,13 @@ public:
     QPushButton *loadFile;
     QLabel *statusLabel;
     QProgressBar *progressBar;
+    QLabel *messageLabel;
 
     void setupUi(QWidget *Widget)
     {
         if (Widget->objectName().isEmpty())
             Widget->setObjectName(QStringLiteral("Widget"));
-        Widget->resize(480, 350);
+        Widget->resize(504, 350);
         verticalLayout = new QVBoxLayout(Widget);
         verticalLayout->setSpacing(6);
         verticalLayout->setContentsMargins(11, 11, 11, 11);
@@ -87,66 +90,77 @@ public:
         gridLayout = new QGridLayout();
         gridLayout->setSpacing(6);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
+        endLongitude = new QLineEdit(route);
+        endLongitude->setObjectName(QStringLiteral("endLongitude"));
+
+        gridLayout->addWidget(endLongitude, 10, 1, 1, 1);
+
+        movementType = new QComboBox(route);
+        movementType->setObjectName(QStringLiteral("movementType"));
+
+        gridLayout->addWidget(movementType, 10, 3, 1, 1);
+
         startLatitude = new QLineEdit(route);
         startLatitude->setObjectName(QStringLiteral("startLatitude"));
 
-        gridLayout->addWidget(startLatitude, 1, 2, 1, 1);
-
-        endLatitude = new QLineEdit(route);
-        endLatitude->setObjectName(QStringLiteral("endLatitude"));
-
-        gridLayout->addWidget(endLatitude, 2, 2, 1, 1);
-
-        longitudeLabel = new QLabel(route);
-        longitudeLabel->setObjectName(QStringLiteral("longitudeLabel"));
-
-        gridLayout->addWidget(longitudeLabel, 0, 1, 1, 1);
-
-        endRadio = new QRadioButton(route);
-        endRadio->setObjectName(QStringLiteral("endRadio"));
-
-        gridLayout->addWidget(endRadio, 2, 0, 1, 1);
+        gridLayout->addWidget(startLatitude, 5, 2, 1, 1);
 
         startLongitude = new QLineEdit(route);
         startLongitude->setObjectName(QStringLiteral("startLongitude"));
 
-        gridLayout->addWidget(startLongitude, 1, 1, 1, 1);
+        gridLayout->addWidget(startLongitude, 5, 1, 1, 1);
 
-        calculateButton = new QPushButton(route);
-        calculateButton->setObjectName(QStringLiteral("calculateButton"));
+        endLatitude = new QLineEdit(route);
+        endLatitude->setObjectName(QStringLiteral("endLatitude"));
 
-        gridLayout->addWidget(calculateButton, 1, 3, 1, 1);
-
-        latitudeLabel = new QLabel(route);
-        latitudeLabel->setObjectName(QStringLiteral("latitudeLabel"));
-
-        gridLayout->addWidget(latitudeLabel, 0, 2, 1, 1);
+        gridLayout->addWidget(endLatitude, 10, 2, 1, 1);
 
         startRadio = new QRadioButton(route);
         startRadio->setObjectName(QStringLiteral("startRadio"));
 
-        gridLayout->addWidget(startRadio, 1, 0, 1, 1);
+        gridLayout->addWidget(startRadio, 5, 0, 1, 1);
 
-        endLongitude = new QLineEdit(route);
-        endLongitude->setObjectName(QStringLiteral("endLongitude"));
+        optimizeBy = new QComboBox(route);
+        optimizeBy->setObjectName(QStringLiteral("optimizeBy"));
 
-        gridLayout->addWidget(endLongitude, 2, 1, 1, 1);
+        gridLayout->addWidget(optimizeBy, 11, 3, 1, 1);
 
         noneRadio = new QRadioButton(route);
         noneRadio->setObjectName(QStringLiteral("noneRadio"));
         noneRadio->setChecked(true);
 
-        gridLayout->addWidget(noneRadio, 3, 0, 1, 1);
+        gridLayout->addWidget(noneRadio, 11, 0, 1, 1);
 
-        movementType = new QComboBox(route);
-        movementType->setObjectName(QStringLiteral("movementType"));
+        endRadio = new QRadioButton(route);
+        endRadio->setObjectName(QStringLiteral("endRadio"));
 
-        gridLayout->addWidget(movementType, 2, 3, 1, 1);
+        gridLayout->addWidget(endRadio, 10, 0, 1, 1);
 
-        optimizeBy = new QComboBox(route);
-        optimizeBy->setObjectName(QStringLiteral("optimizeBy"));
+        sucessFailureLabel = new QLabel(route);
+        sucessFailureLabel->setObjectName(QStringLiteral("sucessFailureLabel"));
 
-        gridLayout->addWidget(optimizeBy, 3, 3, 1, 1);
+        gridLayout->addWidget(sucessFailureLabel, 11, 4, 1, 1);
+
+        longitudeLabel = new QLabel(route);
+        longitudeLabel->setObjectName(QStringLiteral("longitudeLabel"));
+
+        gridLayout->addWidget(longitudeLabel, 4, 1, 1, 1);
+
+        latitudeLabel = new QLabel(route);
+        latitudeLabel->setObjectName(QStringLiteral("latitudeLabel"));
+
+        gridLayout->addWidget(latitudeLabel, 4, 2, 1, 1);
+
+        calculateButton = new QPushButton(route);
+        calculateButton->setObjectName(QStringLiteral("calculateButton"));
+
+        gridLayout->addWidget(calculateButton, 5, 4, 1, 1);
+
+        routingProgressBar = new QProgressBar(route);
+        routingProgressBar->setObjectName(QStringLiteral("routingProgressBar"));
+        routingProgressBar->setValue(0);
+
+        gridLayout->addWidget(routingProgressBar, 10, 4, 1, 1);
 
 
         gridLayout_3->addLayout(gridLayout, 0, 0, 1, 2);
@@ -183,6 +197,9 @@ public:
         progressBar->setGeometry(QRect(100, 90, 118, 23));
         progressBar->setMaximum(8);
         progressBar->setValue(0);
+        messageLabel = new QLabel(Settings);
+        messageLabel->setObjectName(QStringLiteral("messageLabel"));
+        messageLabel->setGeometry(QRect(120, 120, 67, 17));
         tabWidget->addTab(Settings, QString());
 
         gridLayout_2->addWidget(tabWidget, 0, 1, 1, 1);
@@ -202,23 +219,24 @@ public:
     void retranslateUi(QWidget *Widget)
     {
         Widget->setWindowTitle(QApplication::translate("Widget", "Widget", 0));
-        longitudeLabel->setText(QApplication::translate("Widget", "Longitude", 0));
-        endRadio->setText(QApplication::translate("Widget", "End", 0));
-        calculateButton->setText(QApplication::translate("Widget", "Route berechnen", 0));
-        latitudeLabel->setText(QApplication::translate("Widget", "Latitude", 0));
-        startRadio->setText(QApplication::translate("Widget", "Start", 0));
-        noneRadio->setText(QApplication::translate("Widget", "None", 0));
         movementType->clear();
         movementType->insertItems(0, QStringList()
          << QApplication::translate("Widget", "Auto", 0)
          << QApplication::translate("Widget", "Fahrrad", 0)
          << QApplication::translate("Widget", "Fu\303\237g\303\244nger", 0)
         );
+        startRadio->setText(QApplication::translate("Widget", "Start", 0));
         optimizeBy->clear();
         optimizeBy->insertItems(0, QStringList()
          << QApplication::translate("Widget", "Schnellste", 0)
          << QApplication::translate("Widget", "K\303\274rzeste", 0)
         );
+        noneRadio->setText(QApplication::translate("Widget", "None", 0));
+        endRadio->setText(QApplication::translate("Widget", "End", 0));
+        sucessFailureLabel->setText(QString());
+        longitudeLabel->setText(QApplication::translate("Widget", "Longitude", 0));
+        latitudeLabel->setText(QApplication::translate("Widget", "Latitude", 0));
+        calculateButton->setText(QApplication::translate("Widget", "Route berechnen", 0));
         tabWidget->setTabText(tabWidget->indexOf(route), QApplication::translate("Widget", "Route", 0));
         isECar->setText(QApplication::translate("Widget", "Route f\303\274r E-Car", 0));
         ecarReachLabel->setText(QApplication::translate("Widget", "Reichweite", 0));
@@ -230,7 +248,8 @@ public:
         filePath->setText(QApplication::translate("Widget", ".../Path to OSM.pbf File", 0));
         loadFile->setText(QApplication::translate("Widget", "Parse File", 0));
         statusLabel->setText(QApplication::translate("Widget", "Status:", 0));
-        tabWidget->setTabText(tabWidget->indexOf(Settings), QApplication::translate("Widget", "Change OSM File", 0));
+        messageLabel->setText(QString());
+        tabWidget->setTabText(tabWidget->indexOf(Settings), QApplication::translate("Widget", "Parsing", 0));
     } // retranslateUi
 
 };
