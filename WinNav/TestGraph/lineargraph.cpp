@@ -5,9 +5,35 @@ LinearGraph::LinearGraph()
 
 }
 
+LinearGraph::LinearGraph (LinearGraph &copy) {
+    //Copy over all nodes in order
+    for (size_t i=0; i<copy.numNodes(); i++) {
+        nodes.emplace_back(copy.getNode(i));
+    }
+    //Copy over all edges
+    for (size_t i=0; i<copy.numEdges(); i++) {
+        edges.emplace_back(copy.getEdge(i));
+    }
+
+}
+
+LinearGraph & LinearGraph::operator= (LinearGraph &copy) {
+    nodes.clear();
+    edges.clear();
+    //Copy over all nodes in order
+    for (size_t i=0; i<copy.numNodes(); i++) {
+        nodes.emplace_back(copy.getNode(i));
+    }
+    //Copy over all edges
+    for (size_t i=0; i<copy.numEdges(); i++) {
+        edges.emplace_back(copy.getEdge(i));
+    }
+    return *this;
+}
+
 
 PODNode &LinearGraph::getNode(size_t index) {
-    if (index>0 && index < nodes.size()) {
+    if (index < nodes.size()) {
         return nodes[index];
     }
     else {
@@ -17,16 +43,12 @@ PODNode &LinearGraph::getNode(size_t index) {
 }
 
 PODEdge &LinearGraph::getEdge(size_t index) {
-    if (index>0 && index < edges.size()) {
+    if (index < edges.size()) {
         return edges[index];
     }
     else {
         throw (std::invalid_argument("Index out of bounds!"));
     }
-}
-
-size_t LinearGraph::numEdges() {
-    return edges.size();
 }
 
 void LinearGraph::insertNode(const PODNode &node) {

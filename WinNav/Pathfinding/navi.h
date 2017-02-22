@@ -50,6 +50,8 @@ public:
     void setStartRange(const uint8_t range);
     void setRoutingPriority(bool travelTimePriority);
 
+    void getFullGraph (LinearGraph &graph);
+    void getShortestRouteGraph(LinearGraph &graph);
 
     void reset();
 

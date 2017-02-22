@@ -16,6 +16,7 @@ struct NodeCloud {
     {
             const double d0=p1[0]-nodeData[idx_p2].longitude;
             const double d1=p1[1]-nodeData[idx_p2].latitude;
+            ///TODO: This maybe should be the haversine distance instead for improves accurancy
             return d0*d0+d1*d1;
     }
 

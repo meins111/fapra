@@ -59,7 +59,7 @@ public:
     //the current routing task has to run multiple a* runs ... will confuse programm & user!
     void findRoute (const size_t&start, const size_t &target, CondWait_t *condStruct);
 
-    LinearGraph getRoute() { return route; }
+    void getRoute(LinearGraph &retRoute) { retRoute=route; }
 
     int getErrorCode() { return errorCode; }
 

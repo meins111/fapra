@@ -178,6 +178,15 @@ void Widget::parsingDone(int returnCode) {
     //Else set the progress to 100 and set success label message
     ui->progressBar->setValue(100);
     ui->messageLabel->setText("Done!");
+
+    ///DEBUG-ONLY: draw the full graph that was parsed just now! ATTENTION: This makes the map SLOW!!
+
+    navi.getFullGraph(path);
+    mapWidget->getGraphLayer().setGraph(path);
+    mapWidget->update();
+    mapWidget->setCenterLatitude(path.getNode(0).getLatitude());
+    mapWidget->setCenterLongitude(path.getNode(0).getLongitude());
+
     return;
 }
 

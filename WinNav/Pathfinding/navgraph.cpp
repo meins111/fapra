@@ -28,11 +28,23 @@ size_t NavGraph::numEdges() {
 
 NodeInfo& NavGraph::getClosestNode (const NodeInfo &curPos) {
     size_t closestNodeOffset=0xFFFFFFFF;
-    double origin [2] = {curPos.latitude, curPos.latitude};
+    double origin [2] = {curPos.longitude, curPos.latitude};
     double distToClosest=0.0;
+    ///Instead findNeighbours method?
+    nanoflann::KNNResultSet<double> resSet(1);
+    resSet.init(&closestNodeOffset, &distToClosest);
+    closenessTree.findNeighbors(resSet, &origin[0], nanoflann::SearchParams(10));
+    if (closestNodeOffset >= connectGraph.nodes.size()) {
+        throw (std::runtime_error("Computed Neighbour out-of-bounds!"));
+    }
+    else {
+        return nodeInfo.nodeData[closestNodeOffset];
+    }
+    /*
     //Search the closest node of the nodeInfo vector and store its index and distance to the given target
     closenessTree.knnSearch(&origin[0], 1, &closestNodeOffset, &distToClosest);
     return nodeInfo.nodeData[closestNodeOffset];
+    */
 }
 
 NodeInfo& NavGraph::getClosestNode (const double &lon, const double &lat) {

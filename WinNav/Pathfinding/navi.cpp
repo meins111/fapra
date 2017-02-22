@@ -549,6 +549,26 @@ void Navi::setRoutingPriority(bool travelTimePriority) {
     pathfinder.setRoutingPrio(travelTimePriority);
 }
 
+
+void Navi::getFullGraph (LinearGraph &graph) {
+    graph.reset();
+    //Copy over nodes
+    for (size_t i=0; i<fullGraph.nodeInfo.nodeData.size(); ++i) {
+        NodeInfo &cur = fullGraph.nodeInfo.nodeData[i];
+        graph.insertNode(PODNode(cur.longitude, cur.latitude));
+    }
+    //Copy over edges
+    for (size_t i=0; i<fullGraph.connectGraph.edges.size(); ++i) {
+        BasicEdge &cur = fullGraph.connectGraph.edges[i];
+        graph.insertEdge(PODEdge(cur.startNode, cur.endNode));
+    }
+}
+
+void Navi::getShortestRouteGraph(LinearGraph &graph) {
+    graph.reset();
+    pathfinder.getRoute(graph);
+}
+
 void Navi::reset() {
     fullGraph.connectGraph.edges.clear();
     fullGraph.connectGraph.nodes.clear();
