@@ -63,6 +63,7 @@ public:
     QLabel *statusLabel;
     QProgressBar *progressBar;
     QLabel *messageLabel;
+    QPushButton *showGraph;
 
     void setupUi(QWidget *Widget)
     {
@@ -200,6 +201,9 @@ public:
         messageLabel = new QLabel(Settings);
         messageLabel->setObjectName(QStringLiteral("messageLabel"));
         messageLabel->setGeometry(QRect(120, 120, 67, 17));
+        showGraph = new QPushButton(Settings);
+        showGraph->setObjectName(QStringLiteral("showGraph"));
+        showGraph->setGeometry(QRect(308, 80, 131, 25));
         tabWidget->addTab(Settings, QString());
 
         gridLayout_2->addWidget(tabWidget, 0, 1, 1, 1);
@@ -249,6 +253,7 @@ public:
         loadFile->setText(QApplication::translate("Widget", "Parse File", 0));
         statusLabel->setText(QApplication::translate("Widget", "Status:", 0));
         messageLabel->setText(QString());
+        showGraph->setText(QApplication::translate("Widget", "Show Nav Graph", 0));
         tabWidget->setTabText(tabWidget->indexOf(Settings), QApplication::translate("Widget", "Parsing", 0));
     } // retranslateUi
 

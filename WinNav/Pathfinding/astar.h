@@ -31,7 +31,7 @@ struct OpenNode_t {
     //The absolute cost to reach this node
     double gScore;
     OpenNode_t (const size_t &id, const double &hScore, const double &gScore) : id(id), hScore(hScore), gScore(gScore){}
-    OpenNode_t(const OpenNode_t &copy): id(id), hScore(copy.hScore), gScore(copy.gScore){}
+    OpenNode_t(const OpenNode_t &copy): id(copy.id), hScore(copy.hScore), gScore(copy.gScore){}
     OpenNode_t & operator= ( const OpenNode_t & copy) {
                                                         id=copy.id;
                                                         hScore=copy.hScore;

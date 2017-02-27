@@ -265,6 +265,19 @@
            <string/>
           </property>
          </widget>
+         <widget class="QPushButton" name="showGraph">
+          <property name="geometry">
+           <rect>
+            <x>308</x>
+            <y>80</y>
+            <width>131</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Show Nav Graph</string>
+          </property>
+         </widget>
         </widget>
        </widget>
       </item>

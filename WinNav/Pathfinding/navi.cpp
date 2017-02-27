@@ -294,7 +294,11 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 EdgeInfo &curEdgeInfo = fullGraph.edgeInfo.back();
                 //Fill the inserted edge with all necessary data fetched in step 1
                 curEdgeInfo.allowance = edge.allowance;
-                curEdgeInfo.distance = edge.distance;
+                //Calculate distance this edge covers (haversine distance between src and tar)
+                NodeInfo &curStartNode = fullGraph.nodeInfo.nodeData[srcOffset];
+                NodeInfo &curEndNode = fullGraph.nodeInfo.nodeData[tarOffset];
+                double edgeDistance = curStartNode.getHaversineDistanceTo(curEndNode);
+                curEdgeInfo.distance = edgeDistance;
                 //We do NOT copy the subedges from the OSM way, for this is a point-to-point edge, not a composed one!
                 curEdgeInfo.isMetaEdge = false;
                 curEdgeInfo.subEdges.clear();
@@ -309,7 +313,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                     EdgeInfo &curEdgeInfo = fullGraph.edgeInfo.back();
                     //Fill the inserted edge with all necessary data fetched in step 1
                     curEdgeInfo.allowance = edge.allowance;
-                    curEdgeInfo.distance = edge.distance;
+                    curEdgeInfo.distance = edgeDistance;
                     //We do NOT copy the subedges from the OSM way, for this is a point-to-point edge, not a composed one!
                     curEdgeInfo.isMetaEdge = false;
                     curEdgeInfo.subEdges.clear();

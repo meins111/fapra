@@ -26,6 +26,7 @@ Widget::Widget(QWidget *parent) :
     ui->routingProgressBar->setMaximum(100);
     ui->sucessFailureLabel->setText("");
     ui->messageLabel->setText("");
+    graphToggle=false;
 
 	 mapWidget = new MapWidget(this);
 
@@ -179,14 +180,6 @@ void Widget::parsingDone(int returnCode) {
     ui->progressBar->setValue(100);
     ui->messageLabel->setText("Done!");
 
-    ///DEBUG-ONLY: draw the full graph that was parsed just now! ATTENTION: This makes the map SLOW!!
-
-    navi.getFullGraph(path);
-    mapWidget->getGraphLayer().setGraph(path);
-    mapWidget->update();
-    mapWidget->setCenterLatitude(path.getNode(0).getLatitude());
-    mapWidget->setCenterLongitude(path.getNode(0).getLongitude());
-
     return;
 }
 
@@ -242,3 +235,23 @@ std::string Widget::getPbfPath() {
 	return path;
 }
 
+
+void Widget::on_showGraph_clicked()
+{
+    if (!graphToggle) {
+        graphToggle=true;
+        ui->showGraph->setText("Hide Nav Graph");
+        navi.getFullGraph(path);
+        mapWidget->getGraphLayer().setGraph(path);
+        mapWidget->update();
+        return;
+    }
+    else {
+        graphToggle=false;
+        ui->showGraph->setText("Show Nav Graph");
+        path.reset();
+        mapWidget->getGraphLayer().setGraph(path);
+        mapWidget->update();
+        return;
+    }
+}

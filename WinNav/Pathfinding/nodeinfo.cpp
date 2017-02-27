@@ -13,7 +13,9 @@ double NodeInfo::getHaversineDistanceTo (const NodeInfo &targetNode) {
     v = sin((tarLon - lon) / 2);
 
     //Step 3: Calculate the Havensine distance and return it
-    return asin(sqrt(pow(u, 2) + cos(lat)*cos(tarLat)*pow(v, 2)));
+    double inKm = 2*EARTH_RADIUS*asin(sqrt(pow(u, 2) + cos(lat)*cos(tarLat)*pow(v, 2)));
+    //Return distnce in meters
+    return inKm*1000;
 }
 NodeInfo & NodeInfo::operator= ( const NodeInfo & copy) {
    longitude=copy.longitude;

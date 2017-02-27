@@ -175,21 +175,20 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             //Fetch the next adjacent node
             const NodeInfo &adjacentNode = graph.getAdjacentNode(current.id, i);
             //Is this node already closed?
-            if (closedSet.find(adjacentNode.localID)== closedSet.end()) {
+            if (closedSet.find(adjacentNode.localID)!= closedSet.end()) {
                 //Check the next adjacent node
                 continue;
             }
             EdgeInfo &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
             //Fetch the actual cost to reach the adjacent node from the current node
+            ///TODO: edgeCost testen/überarbeiten!!!
             double curCost = current.gScore + adjacentEdge.getEdgeCost(timeIsPrio, curMaxSpeed);
-            //Is the adjacent node already know with a cost lower or equal than this one?
-            if (openSet.find(adjacentNode.localID) != openSet.end()){
-                    //openSet[adjacentNode.localID].gScore <= curCost)
+            //Now we check the following:
+            //A) if the adjacent node is unknown, we add it to the open list
+            //B) if it was already known but we do know a better way to reach it already we just skip that node
+            //C) if it is known but at a higher cost, we update the entry with this cheaper path!
 
-                //Yes, adjacent node already visitied with lower costs, so skip this node
-                return;
-            }
-            //The Node is was not yet visited, so create a new entry in the lists
+            //This is case A): Node was not yet visited, so create a new entry in the lists
             if (openSet.find(adjacentNode.localID)==openSet.end()) {
                 //Node is unknown: create entries in: openlist, predecessor map and prioQueue
                 predecessorMap[adjacentNode.localID]=current.id;
@@ -201,11 +200,10 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             //Node was visited before ...
             Handle_Type_t handle = openSet[adjacentNode.localID];
             if ( (*handle).gScore <= curCost ) {
-                //So we know a better path already!
-                // => we can skip this node
+                //... and we know a better path already, so this is case B)
                 continue;
             }
-            //... and we just found a better way to reach it (from start)!
+            //... and we just found a better way to reach it, so this is case C)!
             //Update the predecessor map entry of the adjacent node so it points to the current node
             predecessorMap[adjacentNode.localID]=current.id;
             //Create an update node to refresh the old entry of the adjacent node

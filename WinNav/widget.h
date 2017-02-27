@@ -51,6 +51,9 @@ public slots:
     void pathfindingProgress(int percentProgress);
     void pathfindingDone(int returnCode);
 
+private slots:
+    void on_showGraph_clicked();
+
 private:
     Ui::Widget *ui;
     //Initialize with car movement and time priority
@@ -58,6 +61,7 @@ private:
     LinearGraph path;
     Slaver slave;
     el::Logger* logger;
+    bool graphToggle;
 
 	 std::string getPbfPath();
 };

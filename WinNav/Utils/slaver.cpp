@@ -90,7 +90,6 @@ void Slaver::listenAndPropagate() {
                     );
         //At this point, something has changed and we have aquired the lock
         //But the notify may only be issued to wake us up and show us we have to stop!
-        logger->info("Listener: Received Update! Propagating ...");
         if(condStruct.stopListening) {
             //So, we have to stop!
             return;
@@ -122,8 +121,6 @@ void Slaver::listenAndPropagate() {
         }
         //Update the progress variable
         oldProgress=condStruct.progress;
-        //Finally make sure to release the lock again, and return to sleep again until the next update
-        logger->info("... signal emitted.");
     }
 }
 
