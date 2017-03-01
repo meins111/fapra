@@ -90,9 +90,19 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         osmpbf::OrTagFilter carDenied ({    new osmpbf::KeyValueTagFilter ("motorcar", "no"),
                                             new osmpbf::KeyMultiValueTagFilter("highway", {"footway", "steps", "path", "cycleway", "platform"})
                                         });
+        //Assign filter to adapter
+        highwayFilter.assignInputAdaptor(&pbi);
+        onewayFilter.assignInputAdaptor(&pbi);
+        speedFilter.assignInputAdaptor(&pbi);
+        footDenied.assignInputAdaptor(&pbi);
+        bikeDenied.assignInputAdaptor(&pbi);
+        carDenied.assignInputAdaptor(&pbi);
+        chargeStationFilter.assignInputAdaptor(&pbi);
 
         /** Parse Step 1: Parse WayStream, collect 'interesting' osm-nodes and ways **/
         logger->info("Parse Step 1: Parse WayStream, collect 'interesting' osm-node-IDs and way infos.");
+        if (updateStruct)
+                updateStruct->updateProgress(1);
         uint32_t addWays=0, invalidWays=0;
         //Loop through all primitve blocks of the file ...
         while (osmFile.parseNextBlock(pbi)) {
@@ -100,7 +110,13 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 //Empty Block, skip
                 continue;
             }
-            highwayFilter.assignInputAdaptor(&pbi);
+            //Update Filters!!
+            highwayFilter.rebuildCache();
+            onewayFilter.rebuildCache();
+            speedFilter.rebuildCache();
+            footDenied.rebuildCache();
+            bikeDenied.rebuildCache();
+            carDenied.rebuildCache();
             //Get a waystream - containing all ways of the current primitve block
             osmpbf::IWayStream ways(pbi.getWayStream());
             //Loop over all those ways ...
@@ -111,11 +127,6 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                     continue;
                 }
                 //So, this way is a highway connecting 2 or more nodes: fetch way data and node id's
-                onewayFilter.assignInputAdaptor(&pbi);
-                speedFilter.assignInputAdaptor(&pbi);
-                footDenied.assignInputAdaptor(&pbi);
-                bikeDenied.assignInputAdaptor(&pbi);
-                carDenied.assignInputAdaptor(&pbi);
                 //Is the way of a supported type?
                 const std::string &edgeTypeString = ways.value(highwayFilter.matchingTag());
                 auto streetType = streetTypeLookup.find( edgeTypeString);
@@ -156,6 +167,12 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 if (info.speed == 0.0) {
                     info.speed=speedLookup[info.type];
                 }
+                else if (info.speed > MAXSPEED_CAR*KMH_TO_MPS) {
+                    //If the speed limit is set to a value higher than 130, normalize it to 130
+                    //This is necessary so that the A* heuristic fulfills certain criteria
+                    info.speed = MAXSPEED_CAR*KMH_TO_MPS;
+                }
+                //Indicate that this is a meta edge and contains several partial edges!
                 info.isMetaEdge=true;
 
                 //...then add all nodes along the way to the set of navigation nodes and to the stored way
@@ -195,8 +212,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
             else {
                 //Get a nodestream - containing all the nodes of the current primitive block
                 osmpbf::INodeStream nodes (pbi.getNodeStream());
-                //Assign the charge station filter to the node block adapter
-                chargeStationFilter.assignInputAdaptor(&pbi);
+                //Update the charge station filter to the node block adapter
+                chargeStationFilter.rebuildCache();
                 //Loop through all nodes of this block ...
                 while (!nodes.isNull()) {
                     //Fetch all Navigation nodes - those are the nodes whose IDs are stored in the map
@@ -220,7 +237,6 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         if (chargeStationFilter.matches(nodes)) {
                             //maybe this node even is a charge station?
                             nodeInfo.isChargeStation = true;
-                            chargeNodes++;
                         }
                         //Keep track for statistic reasons
                         navNodes++;
@@ -323,6 +339,36 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 }
             }
         }
+        //Create a fully connected meta graph, so every node is connected to every other node
+        size_t chargeStationCnt = metaGraph.connectGraph.nodes.size();
+        //Fully connected graph := every node has n-1 edges with n=#Nodes
+        metaGraph.connectGraph.edges.reserve(chargeStationCnt*(chargeStationCnt-1));
+        metaGraph.connectGraph.edges.resize(chargeStationCnt*(chargeStationCnt-1));
+        metaGraph.edgeInfo.reserve(chargeStationCnt*(chargeStationCnt-1));
+        metaGraph.edgeInfo.resize(chargeStationCnt*(chargeStationCnt-1));
+        for (size_t i=0; i< chargeStationCnt; i++) {
+            //Add node->edge offset
+            BasicNode &curNode = metaGraph.connectGraph.nodes[i];
+            curNode.firstEdge=i*(chargeStationCnt-1);
+            curNode.lastEdge=curNode.firstEdge + chargeStationCnt-1;
+            //Add edge->node values
+            size_t tar=0;
+            for (size_t j=0; j<chargeStationCnt-1; j++) {
+                if (i==tar) {
+                    //Skip this special case, as nodes does not have edges to themselves
+                    tar++;
+                    //continue;
+                }
+                BasicEdge &curEdge = metaGraph.connectGraph.edges[curNode.firstEdge+j];
+                curEdge.index=curNode.firstEdge+j;
+                curEdge.startNode=i;
+                curEdge.endNode=tar;
+                //Also add basic data to the edge info
+                EdgeInfo &curEdgeInfo = metaGraph.edgeInfo[curNode.firstEdge+j];
+                curEdgeInfo.isMetaEdge=true;
+                tar++;
+            }
+        }
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
@@ -385,6 +431,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
             //this will help with the correct detection of nodes without outgoing edges!
         }
         //At the end, insert the end of the last nodes' edges
+        ///TODO: Letzter 'Last' Eintrag nochmal durchdenken ob dies nicht .size() sein müsste, da one-past-the-end!
         nodeIt->lastEdge = fullGraph.connectGraph.edges.size()-1;
         //Update progress if a updateStruct is provided
         if ( updateStruct )
