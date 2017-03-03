@@ -20,7 +20,7 @@
       <item row="0" column="1">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="route">
          <attribute name="title">
@@ -157,9 +157,9 @@
          <widget class="QLineEdit" name="ecarReach">
           <property name="geometry">
            <rect>
-            <x>80</x>
+            <x>100</x>
             <y>50</y>
-            <width>271</width>
+            <width>251</width>
             <height>22</height>
            </rect>
           </property>
@@ -169,7 +169,7 @@
            <rect>
             <x>10</x>
             <y>50</y>
-            <width>71</width>
+            <width>81</width>
             <height>16</height>
            </rect>
           </property>
@@ -191,6 +191,32 @@
             <string>Km</string>
            </property>
           </item>
+         </widget>
+         <widget class="QProgressBar" name="prepareProgressBar">
+          <property name="geometry">
+           <rect>
+            <x>310</x>
+            <y>110</y>
+            <width>118</width>
+            <height>23</height>
+           </rect>
+          </property>
+          <property name="value">
+           <number>24</number>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label">
+          <property name="geometry">
+           <rect>
+            <x>206</x>
+            <y>110</y>
+            <width>101</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Preparations</string>
+          </property>
          </widget>
         </widget>
         <widget class="QWidget" name="Settings">

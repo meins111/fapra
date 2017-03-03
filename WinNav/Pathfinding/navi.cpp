@@ -468,6 +468,42 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
     }
 }
 
+void Navi::buildMetaGraph(CondWait_t *updateStruct) {
+    //We will use a local AStar object to perform the calculations for the meta graph to keep the
+    //pathfinder of the class for other purposes
+    AStar localFinder(fullGraph);
+    localFinder.setNavNodeKeepFlag(true);
+    localFinder.setMedium(CAR);
+    //We'll go with distance as routing priorit< for E-Car routing largly depends on distance
+    localFinder.setRoutingPrio(true);
+    //We have to compute the shortest path between every node of the meta graph
+    //This means O(n²) A* computations, where n is the number of meta graph nodes
+    for (size_t i=0; i<metaGraph.connectGraph.edges.size(); i++) {
+        //The edge
+        BasicEdge &curBasicEdge = metaGraph.connectGraph.edges[i];
+        EdgeInfo &curEdgeInfo = metaGraph.edgeInfo[i];
+        //The meta graph node
+        NodeInfo &startNode = metaGraph.nodeInfo.nodeData[curBasicEdge.startNode];
+        NodeInfo &targetNode = metaGraph.nodeInfo.nodeData[curBasicEdge.endNode];
+        //Fetch the nearest nav node for start and target node from the full graph
+        NodeInfo &startNavNode = fullGraph.getClosestNode(startNode.longitude, startNode.latitude);
+        NodeInfo &targetNavNode = fullGraph.getClosestNode(targetNode.longitude, targetNode.latitude);
+        //A*-Routing
+        localFinder.findRoute(startNavNode.localID, targetNavNode.localID, NULL);
+        //Check for errors - if so set edge to max to more or less disable this edge
+        if (localFinder.getErrorCode() < 0) {
+            curEdgeInfo.distance = 1000000000.0;
+            curEdgeInfo.speed = 0.00000001;
+            continue;
+        }
+        //Else everything is fine and we can feth the shortest path and build the meta edge
+        LinearGraph curRoute;
+        localFinder.getRoute(curRoute);
+        curEdgeInfo.subEdges.clear();
+        localFinder.getNavNodesOnRoute(curEdgeInfo.subEdges);
+    }
+}
+
 bool Navi::selfCheck() {
     //Setup the logger
     el::Logger* logger = el::Loggers::getLogger("default");

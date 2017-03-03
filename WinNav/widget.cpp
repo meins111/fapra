@@ -206,10 +206,14 @@ void Widget::pathfindingDone(int returnCode) {
     }
     //Else set the progress to 100 and set success label message
     else {
-        ui->progressBar->setValue(100);
+        ui->routingProgressBar->setValue(100);
         ui->sucessFailureLabel->setText("SUCCESS!");
     }
-
+    navi.getShortestRouteGraph(path);
+    mapWidget->getGraphLayer().setGraph(path);
+    mapWidget->update();
+    mapWidget->setCenterLatitude(path.getNode(0).getLatitude());
+    mapWidget->setCenterLongitude(path.getNode(0).getLongitude());
     //TODO: Get and draw the path if successful
     /*
     //Draw it

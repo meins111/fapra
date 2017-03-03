@@ -37,13 +37,17 @@
 class Navi
 {
 public:
-    Navi() : medium(CAR), timeIsPrio(true), maxRange(0), startRange(0), fullGraph(), pathfinder(fullGraph){}
+    Navi() : pathfinder(fullGraph), fullGraph(), metaGraph(), metaGraphPrepared(false),
+        medium(CAR), timeIsPrio(true), maxRange(0), startRange(0){}
 
     //void parsePbfFile(const std::string &path);
     void parsePbfFile(const std::string &path, CondWait_t *updateStruct);
 
     //Actual Routing from a start node to a target node
     void shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct);
+
+    //Method to complete the metaGraph structure in the background
+    void buildMetaGraph(CondWait_t *updateStruct);
 
     void setTravelMedium (const TravelMedium medium);
     void setMaxRange(const size_t range);
@@ -64,6 +68,7 @@ protected:
 
     //The meta graph containing only shortest-path-connected charge station nodes (most likely via meta-edges)
     NavGraph metaGraph;
+    bool metaGraphPrepared;
 
 
     //Lookup to match the EdgeType and its String representation
@@ -76,6 +81,7 @@ protected:
     double parseOsmSpeedTag(const std::string & speedTag);
     //Utility method to check the integrity of the stored graph
     bool selfCheck();
+
 
     //Build the edges of the meta graph: This includes MANY a* runs - depending on the amount of known recharge stations
     void buildMetaEdges();

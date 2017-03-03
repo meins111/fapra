@@ -59,7 +59,7 @@ public:
     //the current routing task has to run multiple a* runs ... will confuse programm & user!
     void findRoute (const size_t&start, const size_t &target, CondWait_t *condStruct);
 
-    void getRoute(LinearGraph &retRoute) { retRoute=route; }
+    void getRoute(LinearGraph &retRoute);
 
     int getErrorCode() { return errorCode; }
 
@@ -70,7 +70,11 @@ public:
                                           }
     void setRoutingPrio (bool timeIsPrio) { timeIsPrio=timeIsPrio; }
 
+    void setNavNodeKeepFlag (bool keep) { keepNavNodes=keep; }
+
     double getRouteCost () { return totalCost; }
+
+    void getNavNodesOnRoute(std::vector<size_t> &nodes);
 
 private:
     //The error code of the last routing run
@@ -83,12 +87,16 @@ private:
     double maxRange;
     //The resulting best path (with respective to the cost function)
     LinearGraph route;
+    bool routeIsBuild;
     //The travel medium to use for the routing
     TravelMedium curMedium;
     //The maximum speed allowed for the respective travel medium: used for shortest time routing
     double curMaxSpeed;
     //The total cost of the last calculated route
     double totalCost;
+    //Flag if to store nov node ids during econstruction
+    bool keepNavNodes;
+    std::vector<size_t> routeNavNodes;
 
     //Flag indicates which criteria has to be tracked: travel time (true) or travel distance (false)
     bool timeIsPrio;

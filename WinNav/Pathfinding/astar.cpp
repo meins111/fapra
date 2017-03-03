@@ -5,8 +5,10 @@ AStar::AStar(NavGraph &navGraph) : graph(navGraph)
     errorCode=0;
     curMedium=CAR;
     isMaxRangeSet=false;
+    routeIsBuild=false;
     maxRange=0.0;
     timeIsPrio=true;
+    keepNavNodes=false;
     curMaxSpeed=MAXSPEED_CAR;
 }
 void AStar::setMedium (TravelMedium medium) {
@@ -24,6 +26,19 @@ void AStar::setMedium (TravelMedium medium) {
     return;
 }
 
+void AStar::getNavNodesOnRoute(std::vector<size_t> &nodes) {
+    if (errorCode<0 || route.numNodes() == 0) {
+        //No route yet
+        return;
+    }
+    nodes.clear();
+    //Add all node to the vector
+    for (size_t i=0; i<route.numNodes(); i++) {
+        nodes.emplace_back();
+    }
+
+}
+
 void AStar::calculateProgress(const OpenNode_t &cur, size_t start, size_t target, CondWait_t *updateStruct) {
     if (!updateStruct) {
         //No update struct set => no update possible
@@ -36,8 +51,7 @@ void AStar::calculateProgress(const OpenNode_t &cur, size_t start, size_t target
     //Now calculate current (heursitic) distance
     double curDist = startNode.getHaversineDistanceTo(graph.nodeInfo.nodeData[cur.id]);
     //Normalize Distance to get percentage
-    double curProgress = (curDist/startDist)*95;
-    //Final Update (if target was found) will end with 95%, leaving the last 5% for the reconstruction of the graph
+    double curProgress = (curDist/startDist)*100;
     updateStruct->updateProgress(std::round(curProgress));
     return;
 }
@@ -61,6 +75,10 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
     NodeInfo predNode;
     //Insert start node
     route.insertNode(PODNode(curNode.longitude, curNode.latitude));
+    if (keepNavNodes) {
+        routeNavNodes.clear();
+        routeNavNodes.emplace_back(curNodeId);
+    }
     //Start == target?
     if(start==target) {
         done=true;
@@ -93,6 +111,9 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
         predNode = graph.nodeInfo.nodeData[predNodeId];
         //Insert the predecessor into the route
         route.insertNode(PODNode(predNode.longitude, predNode.latitude));
+        if (keepNavNodes) {
+            routeNavNodes.emplace_back(predNodeId);
+        }
         nodes++;
         //Set cur = pred and continue
         curNodeId=predNodeId;
@@ -113,7 +134,15 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
     if (updateStruct) {
         updateStruct->updateProgress(100);
     }
+    routeIsBuild=true;
     return;
+}
+
+void AStar::getRoute(LinearGraph &retRoute) {
+    if (routeIsBuild) {
+        retRoute=route;
+        return;
+    }
 }
 
 
@@ -142,6 +171,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
     openSet.clear();
     predecessorMap.clear();
     route.reset();
+    routeIsBuild=false;
     //Create start 'OpenNode' with the local node ID, the heuristic cost-to-target and the total cost to this target (0 for start node)
     Handle_Type_t handle=prioQueue.emplace(start, h(start, target), 0);
     //Add the start ID and its handle to the open list
@@ -156,14 +186,21 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
         openSet.erase(current.id);
         //Add its node ID to closed set
         closedSet.emplace (current.id);
-
         //Is this the target node?
         if (current.id == target) {
             errorCode=0;
-            //TODO: construct path
+            if (condStruct) {
+                //Almost done, just have to reconstruct the path, then we're done!
+                condStruct->updateProgress(99);
+            }
+            //Build up the shortest path recursively
+            constructPath(start, target, NULL);
             //Store the total cost of the calculated path
             totalCost = current.gScore;
-            //TODO: send update progress
+            if (condStruct) {
+                //Make sure to emit 'Parse Done' Signal
+                condStruct->updateProgress(100);
+            }
             return;
         }
 
