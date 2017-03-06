@@ -44,9 +44,9 @@ double EdgeInfo::getEdgeCost (bool timeIsPrio, const double &mediumMaxSpeed) {
     }
     //Calculate the cost according to the priority selection
     if (timeIsPrio && curSpeed > 0.0) {
-        return distance/speed;
+        return distance/curSpeed;
     }
-    else if (timeIsPrio && speed <= 0.0) {
+    else if (timeIsPrio && curSpeed <= 0.0) {
         //Invalid speed tag
         return 0xFFFFFFFF;
     }

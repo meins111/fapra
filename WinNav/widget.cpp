@@ -210,6 +210,12 @@ void Widget::pathfindingDone(int returnCode) {
         ui->sucessFailureLabel->setText("SUCCESS!");
     }
     navi.getShortestRouteGraph(path);
+    //Check the returned graph
+    if (path.numNodes()<2) {
+        //This seems to be broken!
+        ui->sucessFailureLabel->setText("Error: Path empty!");
+        return;
+    }
     mapWidget->getGraphLayer().setGraph(path);
     mapWidget->update();
     mapWidget->setCenterLatitude(path.getNode(0).getLatitude());

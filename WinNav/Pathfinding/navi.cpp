@@ -21,7 +21,7 @@ const  uint8_t Navi::allowanceLookup[]{
     ALLOW_CAR, ALLOW_CAR, ALLOW_CAR, ALLOW_ALL, ALLOW_ALL,
     ALLOW_ALL, ALLOW_ALL, ALLOW_ALL,
     ALLOW_CAR, ALLOW_CAR, ALLOW_CAR, ALLOW_ALL, ALLOW_ALL,
-    ALLOW_ALL, ALLOW_FOOT, ALLOW_ALL,
+    ALLOW_ALL, ALLOW_FOOT, ALLOW_FOOT|ALLOW_BIKE,
     ALLOW_ALL, ALLOW_CAR, ALLOW_ALL,
     ALLOW_FOOT | ALLOW_BIKE, ALLOW_ALL, ALLOW_FOOT, ALLOW_FOOT | ALLOW_BIKE,
     ALLOW_BIKE,	ALLOW_ALL, ALLOW_FOOT
@@ -88,7 +88,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                                         });
         //Check if car-access is forbidden or it's type implicitly denies car access such as footways
         osmpbf::OrTagFilter carDenied ({    new osmpbf::KeyValueTagFilter ("motorcar", "no"),
-                                            new osmpbf::KeyMultiValueTagFilter("highway", {"footway", "steps", "path", "cycleway", "platform"})
+                                            new osmpbf::KeyMultiValueTagFilter("highway", {"footway", "steps", "path", "cycleway", "platform", "track"})
                                         });
         //Assign filter to adapter
         highwayFilter.assignInputAdaptor(&pbi);
@@ -339,36 +339,6 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 }
             }
         }
-        //Create a fully connected meta graph, so every node is connected to every other node
-        size_t chargeStationCnt = metaGraph.connectGraph.nodes.size();
-        //Fully connected graph := every node has n-1 edges with n=#Nodes
-        metaGraph.connectGraph.edges.reserve(chargeStationCnt*(chargeStationCnt-1));
-        metaGraph.connectGraph.edges.resize(chargeStationCnt*(chargeStationCnt-1));
-        metaGraph.edgeInfo.reserve(chargeStationCnt*(chargeStationCnt-1));
-        metaGraph.edgeInfo.resize(chargeStationCnt*(chargeStationCnt-1));
-        for (size_t i=0; i< chargeStationCnt; i++) {
-            //Add node->edge offset
-            BasicNode &curNode = metaGraph.connectGraph.nodes[i];
-            curNode.firstEdge=i*(chargeStationCnt-1);
-            curNode.lastEdge=curNode.firstEdge + chargeStationCnt-1;
-            //Add edge->node values
-            size_t tar=0;
-            for (size_t j=0; j<chargeStationCnt-1; j++) {
-                if (i==tar) {
-                    //Skip this special case, as nodes does not have edges to themselves
-                    tar++;
-                    //continue;
-                }
-                BasicEdge &curEdge = metaGraph.connectGraph.edges[curNode.firstEdge+j];
-                curEdge.index=curNode.firstEdge+j;
-                curEdge.startNode=i;
-                curEdge.endNode=tar;
-                //Also add basic data to the edge info
-                EdgeInfo &curEdgeInfo = metaGraph.edgeInfo[curNode.firstEdge+j];
-                curEdgeInfo.isMetaEdge=true;
-                tar++;
-            }
-        }
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
@@ -469,6 +439,36 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 }
 
 void Navi::buildMetaGraph(CondWait_t *updateStruct) {
+    //Create a fully connected meta graph, so every node is connected to every other node
+    size_t chargeStationCnt = metaGraph.connectGraph.nodes.size();
+    //Fully connected graph := every node has n-1 edges with n=#Nodes
+    metaGraph.connectGraph.edges.reserve(chargeStationCnt*(chargeStationCnt-1));
+    metaGraph.connectGraph.edges.resize(chargeStationCnt*(chargeStationCnt-1));
+    metaGraph.edgeInfo.reserve(chargeStationCnt*(chargeStationCnt-1));
+    metaGraph.edgeInfo.resize(chargeStationCnt*(chargeStationCnt-1));
+    for (size_t i=0; i< chargeStationCnt; i++) {
+        //Add node->edge offset
+        BasicNode &curNode = metaGraph.connectGraph.nodes[i];
+        curNode.firstEdge=i*(chargeStationCnt-1);
+        curNode.lastEdge=curNode.firstEdge + chargeStationCnt-1;
+        //Add edge->node values
+        size_t tar=0;
+        for (size_t j=0; j<chargeStationCnt-1; j++) {
+            if (i==tar) {
+                //Skip this special case, as nodes does not have edges to themselves
+                tar++;
+                //continue;
+            }
+            BasicEdge &curEdge = metaGraph.connectGraph.edges[curNode.firstEdge+j];
+            curEdge.index=curNode.firstEdge+j;
+            curEdge.startNode=i;
+            curEdge.endNode=tar;
+            //Also add basic data to the edge info
+            EdgeInfo &curEdgeInfo = metaGraph.edgeInfo[curNode.firstEdge+j];
+            curEdgeInfo.isMetaEdge=true;
+            tar++;
+        }
+    }
     //We will use a local AStar object to perform the calculations for the meta graph to keep the
     //pathfinder of the class for other purposes
     AStar localFinder(fullGraph);

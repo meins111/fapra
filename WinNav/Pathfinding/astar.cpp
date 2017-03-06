@@ -176,7 +176,10 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
     Handle_Type_t handle=prioQueue.emplace(start, h(start, target), 0);
     //Add the start ID and its handle to the open list
     openSet.emplace(start, handle);
-
+    //Progress counters we'll use to time update notifications
+    double counterSteps=h(start, target)/100;
+    double counterNext=h(start,target)-counterSteps;
+    int progress = 0;
     //We will continue to search until we run out of unexpanded nodes
     while (!openSet.empty()) {
         //Fetch the most promising node
@@ -203,9 +206,13 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             }
             return;
         }
-
-        //Send a progress notification
-        calculateProgress(current, start, target, condStruct);
+        //Send a progress notification according to the counters
+        if (condStruct && (h(current.id,target) < counterNext)) {
+            counterNext -= counterSteps;
+            ++progress;
+            condStruct->updateProgress(progress);
+        }
+        //Number of adjacent edges of the current node
         size_t adjacentCnt = graph.connectGraph.nodes[current.id].numberOfEdges();
         //Check all adjacent nodes of the expanded node
         for (size_t i=0; i<adjacentCnt; i++) {
@@ -217,6 +224,11 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 continue;
             }
             EdgeInfo &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
+            //Check if the current travel medium is allowed to travel on this edge at all
+            if (adjacentEdge.allowance & curMedium == 0x00) {
+                //Medium not allowed on this edge -> skip
+                continue;
+            }
             //Fetch the actual cost to reach the adjacent node from the current node
             ///TODO: edgeCost testen/überarbeiten!!!
             double curCost = current.gScore + adjacentEdge.getEdgeCost(timeIsPrio, curMaxSpeed);
@@ -230,7 +242,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 //Node is unknown: create entries in: openlist, predecessor map and prioQueue
                 predecessorMap[adjacentNode.localID]=current.id;
                 Handle_Type_t handle = prioQueue.emplace(adjacentNode.localID,
-                                                          h(adjacentNode.localID, target), curCost);
+                                                          h(adjacentNode.localID, target)+curCost, curCost);
                 openSet.emplace(adjacentNode.localID, handle);
                 continue;
             }
@@ -245,7 +257,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             predecessorMap[adjacentNode.localID]=current.id;
             //Create an update node to refresh the old entry of the adjacent node
             //We'll keep the id but update gScore and fScore with their new values
-            OpenNode_t updateNode (adjacentNode.localID, h(adjacentNode.localID, target), curCost);
+            OpenNode_t updateNode (adjacentNode.localID, h(adjacentNode.localID, target)+curCost, curCost);
             //Update the respective node inside the prioQueue via the stored handler: update method will reconstruct
             //fib-heap to ensure correctness if necessary
             prioQueue.update(handle, updateNode);
