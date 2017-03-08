@@ -28,7 +28,7 @@ class Widget : public QWidget
      enum MOVEMENT_TYPE { MOVEMENT_CAR = 0x4, MOVEMENT_BIKE = 0x2, MOVEMENT_FOOT = 0x1 };
 
 	 // Anpassen nach den Ids in der qt-generator `movementType` combobox
-     enum OPTIMIZE_BY { OPTIMIZE_FASTEST = 1, OPTIMIZE_SHORTEST = 0 };
+     enum OPTIMIZE_BY { OPTIMIZE_FASTEST = 0, OPTIMIZE_SHORTEST = 1 };
 
 	 // Anpassen nach den Ids in der qt-generator `reachUnit` combobox
 	 enum REACH_UNIT { REACH_KM = 0 };

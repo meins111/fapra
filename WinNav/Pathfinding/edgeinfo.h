@@ -3,11 +3,13 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "roadtypes.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <vector>
+#include <Utils/easylogging++.h>
 
 class EdgeInfo
 {
@@ -37,6 +39,8 @@ public:
     bool checkAllowance (uint8_t travelMedium);
 
     double getEdgeCost (bool timeIsPrio, const double &mediumMaxSpeed);
+
+    void print();
 };
 
 #endif // EDGEINFO_H

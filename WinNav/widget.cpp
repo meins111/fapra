@@ -84,6 +84,11 @@ void Widget::mouseClickGeoPosition(qreal lon, qreal lat, Marble::GeoDataCoordina
 }
 
 void Widget::startRouting() {
+    //First check if the navGraph is parsed already
+    if (!navi.isNavGraphParsed()) {
+        ui->sucessFailureLabel->setText("Aborted: Parsing incomplete!");
+        return;
+    }
     //Reset the route
     path.reset();
     //Reset gui progress indicators
@@ -121,9 +126,9 @@ void Widget::startRouting() {
 		default:
 		case REACH_KM:
 			reachInM = reachInKm * 1000;
+            navi.setMaxRange(reachInKm);
 			break;
 	}
-	// navigator.setECarReach(reachInM);
 
     ///Test-Graph
     //mapWidget->getGraphLayer().setGraph(testGraph);
@@ -215,6 +220,21 @@ void Widget::pathfindingDone(int returnCode) {
         //This seems to be broken!
         ui->sucessFailureLabel->setText("Error: Path empty!");
         return;
+    }
+    double routeCost = navi.getShortestRouteCost();
+    if (navi.getRoutingPrio()) {
+        //Quickest path, so the cost is given in travel time, unit is seconds
+        routeCost /= 60;    //In minutes
+        long intCost = std::round(routeCost);
+        std::string cost = "Traveltime: " + std::to_string(intCost) + " min.";
+        ui->routeDetailsLabel->setText(QString::fromStdString(cost));
+    }
+    else {
+        //Shortest Path in terms of travel distance, unit is meters
+        routeCost /= 1000;    //In kilometers
+        long intCost = std::round(routeCost);
+        std::string cost = "Traveltime: " + std::to_string(intCost) + " km.";
+        ui->routeDetailsLabel->setText(QString::fromStdString(cost));
     }
     mapWidget->getGraphLayer().setGraph(path);
     mapWidget->update();

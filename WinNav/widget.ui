@@ -20,7 +20,7 @@
       <item row="0" column="1">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="route">
          <attribute name="title">
@@ -30,7 +30,11 @@
           <item row="0" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout">
             <item row="10" column="1">
-             <widget class="QLineEdit" name="endLongitude"/>
+             <widget class="QLineEdit" name="endLongitude">
+              <property name="text">
+               <string>9.42389</string>
+              </property>
+             </widget>
             </item>
             <item row="10" column="3">
              <widget class="QComboBox" name="movementType">
@@ -52,13 +56,25 @@
              </widget>
             </item>
             <item row="5" column="2">
-             <widget class="QLineEdit" name="startLatitude"/>
+             <widget class="QLineEdit" name="startLatitude">
+              <property name="text">
+               <string>48.9422</string>
+              </property>
+             </widget>
             </item>
             <item row="5" column="1">
-             <widget class="QLineEdit" name="startLongitude"/>
+             <widget class="QLineEdit" name="startLongitude">
+              <property name="text">
+               <string>9.30089</string>
+              </property>
+             </widget>
             </item>
             <item row="10" column="2">
-             <widget class="QLineEdit" name="endLatitude"/>
+             <widget class="QLineEdit" name="endLatitude">
+              <property name="text">
+               <string>48.691</string>
+              </property>
+             </widget>
             </item>
             <item row="5" column="0">
              <widget class="QRadioButton" name="startRadio">
@@ -130,6 +146,13 @@
              <widget class="QProgressBar" name="routingProgressBar">
               <property name="value">
                <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="4">
+             <widget class="QLabel" name="routeDetailsLabel">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>

@@ -12,9 +12,9 @@
 #include <cmath>
 
 //Max speed on any edge by travel medium - used in the a*-time heuristic
-#define MAXSPEED_CAR 130*0.27778
-#define MAXSPEED_BIKE 15*0.27778
-#define MAXSPEED_FOOT 6*0.27778
+#define MAXSPEED_CAR_MPS 130*0.27778
+#define MAXSPEED_BIKE_MPS 15*0.27778
+#define MAXSPEED_FOOT_MPS 6*0.27778
 
 //Define some Error Codes
 #define TARGET_UNREACHABLE_ERROR        -16
@@ -68,7 +68,7 @@ public:
     void setMaxDistance (double maxRange) { isMaxRangeSet = true;
                                             maxRange = maxRange;
                                           }
-    void setRoutingPrio (bool timeIsPrio) { timeIsPrio=timeIsPrio; }
+    void setRoutingPrio (bool timeIsPrio) { this->timeIsPrio=timeIsPrio; }
 
     void setNavNodeKeepFlag (bool keep) { keepNavNodes=keep; }
 
@@ -97,6 +97,7 @@ private:
     //Flag if to store nov node ids during econstruction
     bool keepNavNodes;
     std::vector<size_t> routeNavNodes;
+    std::vector<size_t> routeNavEdges;
 
     //Flag indicates which criteria has to be tracked: travel time (true) or travel distance (false)
     bool timeIsPrio;

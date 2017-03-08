@@ -55,3 +55,9 @@ double EdgeInfo::getEdgeCost (bool timeIsPrio, const double &mediumMaxSpeed) {
         return distance;
     }
 }
+
+void EdgeInfo::print() {
+    el::Logger* logger = el::Loggers::getLogger("default");
+    logger->debug("EdgeInfo :: Allow=%v : Dist=%v : Speed=%v : Type=%v", allowance, distance, speed, type);
+    //printf ("EdgeInfo :: Allow=%2.2X : Dist=%f : Speed=%f : Type=%2.2X", allowance, distance, speed, type);
+}

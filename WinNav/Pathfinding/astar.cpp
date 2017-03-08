@@ -9,19 +9,19 @@ AStar::AStar(NavGraph &navGraph) : graph(navGraph)
     maxRange=0.0;
     timeIsPrio=true;
     keepNavNodes=false;
-    curMaxSpeed=MAXSPEED_CAR;
+    curMaxSpeed=MAXSPEED_CAR_MPS;
 }
 void AStar::setMedium (TravelMedium medium) {
     curMedium=medium;
     //Set maxspeed value according to set travel medium
     if (curMedium == CAR) {
-        curMaxSpeed=MAXSPEED_CAR;
+        curMaxSpeed=MAXSPEED_CAR_MPS;
     }
     else if (curMedium==BIKE) {
-        curMaxSpeed==MAXSPEED_BIKE;
+        curMaxSpeed==MAXSPEED_BIKE_MPS;
     }
     else {
-        curMaxSpeed==MAXSPEED_FOOT;
+        curMaxSpeed==MAXSPEED_FOOT_MPS;
     }
     return;
 }
@@ -77,6 +77,7 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
     route.insertNode(PODNode(curNode.longitude, curNode.latitude));
     if (keepNavNodes) {
         routeNavNodes.clear();
+        routeNavEdges.clear();
         routeNavNodes.emplace_back(curNodeId);
     }
     //Start == target?
@@ -113,6 +114,7 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
         route.insertNode(PODNode(predNode.longitude, predNode.latitude));
         if (keepNavNodes) {
             routeNavNodes.emplace_back(predNodeId);
+            routeNavEdges.emplace_back(graph.getEdgeBetweenNodes(predNodeId, curNodeId));
         }
         nodes++;
         //Set cur = pred and continue
@@ -129,6 +131,12 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
         size_t end = nodes-1-i-1;
         route.insertEdge(PODEdge(start, end));
     }
+    /* Debug Print to check edge properties, espacially the speed tag which was problematic for some time
+    //Print the edge infos of all path edges
+    for (long i=routeNavEdges.size()-1; i>0; i--) {
+        graph.edgeInfo[routeNavEdges[i]].print();
+    }
+    */
     errorCode=0;
     //Route building complete: update
     if (updateStruct) {
@@ -173,9 +181,9 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
     route.reset();
     routeIsBuild=false;
     //Create start 'OpenNode' with the local node ID, the heuristic cost-to-target and the total cost to this target (0 for start node)
-    Handle_Type_t handle=prioQueue.emplace(start, h(start, target), 0);
+    Handle_Type_t startHandle=prioQueue.emplace(start, h(start, target), 0);
     //Add the start ID and its handle to the open list
-    openSet.emplace(start, handle);
+    openSet.emplace(start, startHandle);
     //Progress counters we'll use to time update notifications
     double counterSteps=h(start, target)/100;
     double counterNext=h(start,target)-counterSteps;
@@ -242,7 +250,8 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 //Node is unknown: create entries in: openlist, predecessor map and prioQueue
                 predecessorMap[adjacentNode.localID]=current.id;
                 Handle_Type_t handle = prioQueue.emplace(adjacentNode.localID,
-                                                          h(adjacentNode.localID, target)+curCost, curCost);
+                                                          h(adjacentNode.localID, target)+curCost,
+                                                            curCost);
                 openSet.emplace(adjacentNode.localID, handle);
                 continue;
             }
@@ -257,7 +266,9 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             predecessorMap[adjacentNode.localID]=current.id;
             //Create an update node to refresh the old entry of the adjacent node
             //We'll keep the id but update gScore and fScore with their new values
-            OpenNode_t updateNode (adjacentNode.localID, h(adjacentNode.localID, target)+curCost, curCost);
+            OpenNode_t updateNode (adjacentNode.localID,
+                                   h(adjacentNode.localID, target)+curCost,
+                                    curCost);
             //Update the respective node inside the prioQueue via the stored handler: update method will reconstruct
             //fib-heap to ensure correctness if necessary
             prioQueue.update(handle, updateNode);

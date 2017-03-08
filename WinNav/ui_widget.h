@@ -52,6 +52,7 @@ public:
     QLabel *latitudeLabel;
     QPushButton *calculateButton;
     QProgressBar *routingProgressBar;
+    QLabel *routeDetailsLabel;
     QWidget *ecar;
     QCheckBox *isECar;
     QLineEdit *ecarReach;
@@ -165,6 +166,11 @@ public:
 
         gridLayout->addWidget(routingProgressBar, 10, 4, 1, 1);
 
+        routeDetailsLabel = new QLabel(route);
+        routeDetailsLabel->setObjectName(QStringLiteral("routeDetailsLabel"));
+
+        gridLayout->addWidget(routeDetailsLabel, 4, 4, 1, 1);
+
 
         gridLayout_3->addLayout(gridLayout, 0, 0, 1, 2);
 
@@ -223,7 +229,7 @@ public:
 
         retranslateUi(Widget);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(Widget);
@@ -232,12 +238,16 @@ public:
     void retranslateUi(QWidget *Widget)
     {
         Widget->setWindowTitle(QApplication::translate("Widget", "Widget", 0));
+        endLongitude->setText(QApplication::translate("Widget", "9.42389", 0));
         movementType->clear();
         movementType->insertItems(0, QStringList()
          << QApplication::translate("Widget", "Auto", 0)
          << QApplication::translate("Widget", "Fahrrad", 0)
          << QApplication::translate("Widget", "Fu\303\237g\303\244nger", 0)
         );
+        startLatitude->setText(QApplication::translate("Widget", "48.9422", 0));
+        startLongitude->setText(QApplication::translate("Widget", "9.30089", 0));
+        endLatitude->setText(QApplication::translate("Widget", "48.691", 0));
         startRadio->setText(QApplication::translate("Widget", "Start", 0));
         optimizeBy->clear();
         optimizeBy->insertItems(0, QStringList()
@@ -250,6 +260,7 @@ public:
         longitudeLabel->setText(QApplication::translate("Widget", "Longitude", 0));
         latitudeLabel->setText(QApplication::translate("Widget", "Latitude", 0));
         calculateButton->setText(QApplication::translate("Widget", "Route berechnen", 0));
+        routeDetailsLabel->setText(QString());
         tabWidget->setTabText(tabWidget->indexOf(route), QApplication::translate("Widget", "Route", 0));
         isECar->setText(QApplication::translate("Widget", "Route f\303\274r E-Car", 0));
         ecarReachLabel->setText(QApplication::translate("Widget", "Reichweite", 0));

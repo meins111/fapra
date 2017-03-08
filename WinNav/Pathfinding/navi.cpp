@@ -165,12 +165,12 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 //Check if the speed still is set to 0 thus the parsing failed or no speed value is given
                 // => use default speed limit by street type
                 if (info.speed == 0.0) {
-                    info.speed=speedLookup[info.type];
+                    info.speed=speedLookup[info.type] * KMH_TO_MPS;
                 }
-                else if (info.speed > MAXSPEED_CAR*KMH_TO_MPS) {
+                else if (info.speed > (MAXSPEED_CAR_MPS+0.5)) {
                     //If the speed limit is set to a value higher than 130, normalize it to 130
                     //This is necessary so that the A* heuristic fulfills certain criteria
-                    info.speed = MAXSPEED_CAR*KMH_TO_MPS;
+                    info.speed = MAXSPEED_CAR_MPS;
                 }
                 //Indicate that this is a meta edge and contains several partial edges!
                 info.isMetaEdge=true;
@@ -427,7 +427,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         }
         else {
             logger->info("Self Check successful!");
-
+            fullGraphParsed=true;
             //Update progress if a updateStruct is provided
             if ( updateStruct )
                 updateStruct->updateProgress( 100 );
@@ -560,6 +560,7 @@ bool Navi::selfCheck() {
     }
     //Seems alright!
     logger->info("Seems alright!\n");
+
     return true;
 }
 
@@ -571,6 +572,8 @@ void Navi::shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct)
     ///NOTE: This is only the most simplest case
     /// TODO: Rethink strategy for E-Routing case
     //Redirect call to AStar
+    ///DEBUG:
+    pathfinder.setNavNodeKeepFlag(true);
     pathfinder.findRoute(startNode.localID, targetNode.localID, updateStruct);
 }
 
@@ -596,7 +599,7 @@ double Navi::parseOsmSpeedTag(const std::string & speedTag) {
     double speed = atof(numericalSpeed.c_str());
 
     //Second: Check for possible unit value at the end (km/h, mp/h) and convert to meter/second
-    if (speedTag.find("m") != std::string::npos) {
+    if (speedTag.find("mph") != std::string::npos) {
             speed *= MPH_TO_MPS;
     }
     else {
@@ -610,7 +613,7 @@ double Navi::parseOsmSpeedTag(const std::string & speedTag) {
     }
     else if (speedLookup[MOTORWAY]*KMH_TO_MPS +1 < speed) {
         //Parsed value is higher than the maximum
-        // => possible parse error: return 0 and go with default speed by way type value
+        // => possible parse error: return 0 thus go with default speed by way type value
         speed = 0.0;
     }
     return speed;
@@ -632,7 +635,7 @@ void Navi::setStartRange(const uint8_t range) {
 }
 
 void Navi::setRoutingPriority(bool travelTimePriority) {
-    this->timeIsPrio=travelTimePriority;
+    timeIsPrio=travelTimePriority;
     pathfinder.setRoutingPrio(travelTimePriority);
 }
 

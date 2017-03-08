@@ -28,6 +28,7 @@
 #define KMH_TO_MPS 0.27778
 //Constant to convert from miles/h to meter per second
 #define MPH_TO_MPS 0.44704
+#define MPS_TO_KMH 3.6
 //The number of OSM-Highway types we want to use
 #define OSM_HIGHWAY_TYPES 27
 
@@ -37,7 +38,7 @@
 class Navi
 {
 public:
-    Navi() : pathfinder(fullGraph), fullGraph(), metaGraph(), metaGraphPrepared(false),
+    Navi() : pathfinder(fullGraph), fullGraph(), fullGraphParsed(false), metaGraph(), metaGraphParsed(false),
         medium(CAR), timeIsPrio(true), maxRange(0), startRange(0){}
 
     //void parsePbfFile(const std::string &path);
@@ -56,6 +57,10 @@ public:
 
     void getFullGraph (LinearGraph &graph);
     void getShortestRouteGraph(LinearGraph &graph);
+    double getShortestRouteCost () { return pathfinder.getRouteCost(); }
+    bool getRoutingPrio() { return timeIsPrio; }
+    bool isNavGraphParsed () { return fullGraphParsed; }
+    bool isEGraphParsed () { return metaGraphParsed; }
 
     void reset();
 
@@ -65,10 +70,11 @@ protected:
 
     //The full street network: not meta-edges allowed
     NavGraph fullGraph;
+    bool fullGraphParsed;
 
     //The meta graph containing only shortest-path-connected charge station nodes (most likely via meta-edges)
     NavGraph metaGraph;
-    bool metaGraphPrepared;
+    bool metaGraphParsed;
 
 
     //Lookup to match the EdgeType and its String representation
