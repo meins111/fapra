@@ -57,9 +57,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
             throw (std::invalid_argument ("Invalid Path or bad file."));
         }
         else {
-            logger->info("Opened OSM-File: %v.", path);
+            logger->info("Opened OSM-File: %v with total size: %v.", path, osmFile.totalSize());
         }
-
         /** Create toolbox to parse **/
         //Primitive Input Block adapter - able to read one protobuf primitive block at a time
         osmpbf::PrimitiveBlockInputAdaptor pbi;
@@ -189,6 +188,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 ways.next();
             }
         }
+        //Shrink to fit call on the vector to not waste memory
+        osmWays.shrink_to_fit();
         logger->info("Found %v highways, %v invalid ways and %v total nodes.", osmWays.size(), invalidWays, osmIdMap.size());
 
         //Update progress if a updateStruct is provided
@@ -272,10 +273,12 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 
         /** Parse Step 3: Build graph edges from stored way data **/
         logger->info("Parse Step 3: Build the graph edges from stored way data.");
-        //Allocate memory 2 times the number of nodes: most ways are not one ways, so we will have about two edges
-        //for each point-to-point edge
-        fullGraph.connectGraph.edges.reserve(navNodes*2);
-        fullGraph.edgeInfo.reserve(navNodes*2);
+        //Allocate memory 3 times the number of nodes: most ways are not one ways, so we will have at the very least two edges
+        //for each point-to-point edge, also there are many nodes which have multiple outgoing edges.
+        //Allocate three times should mostly be enough and ensures, that no reallocation occurs which would result in a heavy memory
+        //overuse by multiplying the current allocated space, we'll shrink to fit the cvecors afterwards
+        fullGraph.connectGraph.edges.reserve(navNodes*3);
+        fullGraph.edgeInfo.reserve(navNodes*3);
         size_t srcOffset=0xFFFFFFFF, tarOffset=0xFFFFFFFF;
         //For all stored ways...
         for (size_t i=0; i<osmWays.size(); i++) {
@@ -339,6 +342,11 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 }
             }
         }
+        //Shrink to fit on the vectors
+        fullGraph.connectGraph.edges.shrink_to_fit();
+        fullGraph.edgeInfo.shrink_to_fit();
+        //Clear stored osm ways!
+        osmWays.clear();
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
@@ -366,9 +374,9 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
 
         inplaceReorder(fullGraph.edgeInfo, indizes);
 
-        //Free the helper vector and the stored osm ways
+        //Free the helper vector
         indizes.clear();
-        osmWays.clear();
+
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
@@ -434,12 +442,23 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         }
 
     } catch(StopWorkingException e) {
+        //Delete half parsed graph
+        fullGraph.clear();
+        metaGraph.clear();
+        fullGraphParsed=false;
+        metaGraphParsed=false;
         logger->info("Process was aborted");
     }
 }
 
 void Navi::buildMetaGraph(CondWait_t *updateStruct) {
-    //Create a fully connected meta graph, so every node is connected to every other node
+    if (metaGraph.connectGraph.nodes.size() <2) {
+        //Nothing to to with 0 or only 1 charge station
+        return;
+    }
+    el::Logger* logger = el::Loggers::getLogger("default");
+    logger->info("Start to build up the meta graph for %v charging nodes ...", metaGraph.connectGraph.nodes.size());
+    //Step 1: Create a fully connected meta graph, so every node is connected to every other node
     size_t chargeStationCnt = metaGraph.connectGraph.nodes.size();
     //Fully connected graph := every node has n-1 edges with n=#Nodes
     metaGraph.connectGraph.edges.reserve(chargeStationCnt*(chargeStationCnt-1));
@@ -469,16 +488,32 @@ void Navi::buildMetaGraph(CondWait_t *updateStruct) {
             tar++;
         }
     }
-    //We will use a local AStar object to perform the calculations for the meta graph to keep the
+    logger->info("Meta Graph connections built. Start calculating the shortest path for each edge. This will take a while...");
+    //Step 2: Calculate the shortest path between each charging station an store the respective path for later use
+    //Note: We will use a local AStar object to perform the calculations for the meta graph to keep the
     //pathfinder of the class for other purposes
     AStar localFinder(fullGraph);
     localFinder.setNavNodeKeepFlag(true);
     localFinder.setMedium(CAR);
-    //We'll go with distance as routing priorit< for E-Car routing largly depends on distance
     localFinder.setRoutingPrio(true);
+    long connectionCnt = metaGraph.connectGraph.edges.size();
+    long stepWidth = connectionCnt / 100;
+    long stepCnt=0;
+    long steps=0;
     //We have to compute the shortest path between every node of the meta graph
     //This means O(n²) A* computations, where n is the number of meta graph nodes
     for (size_t i=0; i<metaGraph.connectGraph.edges.size(); i++) {
+        //Check for stop-signal
+        if (updateStruct && updateStruct->stopWorking) {
+            //We shall stop working!
+            return;
+        }
+        //Update if crossed a step
+        if (updateStruct && steps > stepWidth) {
+            ++stepCnt;
+            steps=0;
+            updateStruct->updateProgress(stepCnt);
+        }
         //The edge
         BasicEdge &curBasicEdge = metaGraph.connectGraph.edges[i];
         EdgeInfo &curEdgeInfo = metaGraph.edgeInfo[i];
@@ -500,7 +535,15 @@ void Navi::buildMetaGraph(CondWait_t *updateStruct) {
         LinearGraph curRoute;
         localFinder.getRoute(curRoute);
         curEdgeInfo.subEdges.clear();
+        curEdgeInfo.allowance=CAR;
+        curEdgeInfo.isOneWay=true;
+        curEdgeInfo.type=SECONDARY;
+        curEdgeInfo.distance=localFinder.getRouteDistance();
+        curEdgeInfo.speed=localFinder.getRouteTravelTime();
+        //Store each node ID along the shortest path in the subedge array of the current meta edge between two charging stations
         localFinder.getNavNodesOnRoute(curEdgeInfo.subEdges);
+        logger->info("Meta Graph Builder: Processed Edges: %v/%v.", i, metaGraph.connectGraph.edges.size());
+        ++steps;
     }
 }
 

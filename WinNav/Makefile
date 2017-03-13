@@ -441,11 +441,11 @@ moc_widget.cpp: MapWidget/MapWidget.h \
 		Pathfinding/nodeinfo.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h \
 		Pathfinding/navgraph.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
-		Utils/easylogging++.h \
 		Utils/inplacevectorreorder.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
@@ -491,11 +491,11 @@ moc_slaver.cpp: TestGraph/lineargraph.h \
 		Pathfinding/nodeinfo.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h \
 		Pathfinding/navgraph.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
-		Utils/easylogging++.h \
 		Utils/inplacevectorreorder.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
@@ -560,11 +560,11 @@ main.o: main.cpp widget.h \
 		Pathfinding/nodeinfo.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h \
 		Pathfinding/navgraph.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
-		Utils/easylogging++.h \
 		Utils/inplacevectorreorder.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
@@ -612,11 +612,11 @@ widget.o: widget.cpp widget.h \
 		Pathfinding/nodeinfo.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h \
 		Pathfinding/navgraph.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
-		Utils/easylogging++.h \
 		Utils/inplacevectorreorder.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
@@ -711,7 +711,8 @@ nodeinfo.o: Pathfinding/nodeinfo.cpp Pathfinding/nodeinfo.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o nodeinfo.o Pathfinding/nodeinfo.cpp
 
 edgeinfo.o: Pathfinding/edgeinfo.cpp Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o edgeinfo.o Pathfinding/edgeinfo.cpp
 
 navgraph.o: Pathfinding/navgraph.cpp Pathfinding/navgraph.h \
@@ -720,6 +721,7 @@ navgraph.o: Pathfinding/navgraph.cpp Pathfinding/navgraph.h \
 		GraphInterface/Edge.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
 		Pathfinding/nodeinfo.h \
@@ -738,11 +740,11 @@ navi.o: Pathfinding/navi.cpp Pathfinding/navi.h \
 		Pathfinding/nodeinfo.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h \
 		Pathfinding/navgraph.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
-		Utils/easylogging++.h \
 		Utils/inplacevectorreorder.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
@@ -801,11 +803,11 @@ slaver.o: Utils/slaver.cpp Utils/slaver.h \
 		Pathfinding/nodeinfo.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h \
 		Pathfinding/navgraph.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
-		Utils/easylogging++.h \
 		Utils/inplacevectorreorder.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
@@ -851,6 +853,7 @@ astar.o: Pathfinding/astar.cpp Pathfinding/astar.h \
 		GraphInterface/Edge.h \
 		Pathfinding/edgeinfo.h \
 		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
 		Pathfinding/nodeinfo.h \
@@ -862,7 +865,6 @@ astar.o: Pathfinding/astar.cpp Pathfinding/astar.h \
 		TestGraph/PODNode.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
-		Utils/easylogging++.h \
 		Pathfinding/allowancemasks.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o astar.o Pathfinding/astar.cpp
 

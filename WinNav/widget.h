@@ -14,6 +14,8 @@
 #include "Utils/slaver.h"
 #include "Utils/easylogging++.h"
 #include <stdio.h>
+#include <iomanip> // setprecision
+#include <sstream> // stringstream
 
 
 namespace Ui {
@@ -50,6 +52,9 @@ public slots:
 
     void pathfindingProgress(int percentProgress);
     void pathfindingDone(int returnCode);
+
+    void metaGraphProgress(int percentProgress);
+    void metaGraphDone(int returnValue);
 
 private slots:
     void on_showGraph_clicked();

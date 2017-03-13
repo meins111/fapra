@@ -74,6 +74,10 @@ public:
 
     double getRouteCost () { return totalCost; }
 
+    double getRouteDistance() { return totalDistance; }
+
+    double getRouteTravelTime () { return totalTime; }
+
     void getNavNodesOnRoute(std::vector<size_t> &nodes);
 
 private:
@@ -92,8 +96,12 @@ private:
     TravelMedium curMedium;
     //The maximum speed allowed for the respective travel medium: used for shortest time routing
     double curMaxSpeed;
+
     //The total cost of the last calculated route
     double totalCost;
+    double totalDistance;
+    double totalTime;
+
     //Flag if to store nov node ids during econstruction
     bool keepNavNodes;
     std::vector<size_t> routeNavNodes;

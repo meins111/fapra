@@ -24,7 +24,7 @@ public:
     /* Edge Informations */
     uint8_t allowance;
     double distance;
-    double speed;
+    double speed;       //Note: will store travel time of the meta edge
     bool isOneWay;
     EdgeType type;
 

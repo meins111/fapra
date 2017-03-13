@@ -89,3 +89,10 @@ size_t NavGraph::getEdgeBetweenNodes (const size_t start, size_t target) {
     //If we end here, we did not find a connection between start and target: return max value
     return 0xFFFFFFFF;
 }
+
+void NavGraph::clear() {
+    connectGraph.nodes.clear();
+    connectGraph.edges.clear();
+    edgeInfo.clear();
+    nodeInfo.nodeData.clear();
+}

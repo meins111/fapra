@@ -67,12 +67,15 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
         }
         return;
     }
-
+    //initi infos
     size_t curNodeId = target,
             predNodeId=0xFFFFFFF;
     bool done=false;
     NodeInfo curNode = graph.nodeInfo.nodeData[curNodeId];
     NodeInfo predNode;
+    totalDistance=0.0;
+    totalTime=0.0;
+
     //Insert start node
     route.insertNode(PODNode(curNode.longitude, curNode.latitude));
     if (keepNavNodes) {
@@ -112,9 +115,14 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
         predNode = graph.nodeInfo.nodeData[predNodeId];
         //Insert the predecessor into the route
         route.insertNode(PODNode(predNode.longitude, predNode.latitude));
+        EdgeInfo &curEdgeInfo = graph.edgeInfo[graph.getEdgeBetweenNodes(predNodeId, curNodeId)];
+        //calcuate costs: distance & travel time
+        totalDistance+=curEdgeInfo.distance;
+        totalTime+=curEdgeInfo.distance/std::min(curMaxSpeed, curEdgeInfo.speed);
+        //Store node ids along the way for later use
         if (keepNavNodes) {
             routeNavNodes.emplace_back(predNodeId);
-            routeNavEdges.emplace_back(graph.getEdgeBetweenNodes(predNodeId, curNodeId));
+            routeNavEdges.emplace_back(curNodeId);
         }
         nodes++;
         //Set cur = pred and continue
@@ -173,6 +181,10 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
         }
         return;
     }
+    //Sanity check of maxrange
+    if (maxRange < 0.5) {
+        isMaxRangeSet=false;
+    }
     //Initialize sets to empty
     closedSet.clear();
     prioQueue.clear();
@@ -197,6 +209,15 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
         openSet.erase(current.id);
         //Add its node ID to closed set
         closedSet.emplace (current.id);
+        //Check if we crossed the maxReach boundary with this node
+        if (isMaxRangeSet) {
+            if (current.gScore > maxRange) {
+                //This node may not further be expanded, since it's total travel distance is greater than the maximum travel range
+                //Skip this node and check the next
+                //NOTE: This also applies if the fetched node is the target, since we would not (barely) reach it!
+                continue;
+            }
+        }
         //Is this the target node?
         if (current.id == target) {
             errorCode=0;

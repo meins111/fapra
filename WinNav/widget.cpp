@@ -24,6 +24,9 @@ Widget::Widget(QWidget *parent) :
     ui->progressBar->setValue(0);
     ui->routingProgressBar->setMinimum(0);
     ui->routingProgressBar->setMaximum(100);
+    ui->prepareProgressBar->setMinimum(0);
+    ui->prepareProgressBar->setMaximum(100);
+    ui->prepareProgressBar->setValue(0);
     ui->sucessFailureLabel->setText("");
     ui->messageLabel->setText("");
     graphToggle=false;
@@ -43,6 +46,8 @@ Widget::Widget(QWidget *parent) :
      QObject::connect(&slave, SIGNAL(parsingDone(int)), this, SLOT(parsingDone(int)));
      QObject::connect(&slave, SIGNAL(pathfindingProgress(int)), this, SLOT(pathfindingProgress(int)));
      QObject::connect(&slave, SIGNAL(pathfindingDone(int)), this, SLOT(pathfindingDone(int)));
+     QObject::connect(&slave, SIGNAL(metaGraphDone(int)), this, SLOT(metaGraphDone(int)));
+     QObject::connect(&slave, SIGNAL(metaGraphProgress(int)), this, SLOT(metaGraphProgress(int)));
      QVBoxLayout *layout = dynamic_cast<QVBoxLayout *> (this->layout());
 	 layout->QLayout::addWidget(mapWidget);
 
@@ -155,6 +160,14 @@ void Widget::startRouting() {
 
 void Widget::loadPushed() {
     std::string path (ui->filePath->text().toStdString());
+    //string path = this->getPbfPath();
+
+    logger->info("Try to load specified osm file: %v ...", path);
+    ui->messageLabel->setText("Parsing...");
+    ui->progressBar->setValue(0);
+    slave.startParsing(path);
+
+
     //slaves.startNavGraphParsing(path, &navi);
     //navi.buildNavGraph(path);
     //ui->progressBar->setValue(ui->progressBar->maximum());
@@ -184,8 +197,28 @@ void Widget::parsingDone(int returnCode) {
     //Else set the progress to 100 and set success label message
     ui->progressBar->setValue(100);
     ui->messageLabel->setText("Done!");
+    //Start off meta graph building after the initial parsing is done
+    ui->label->setText("Preparing...");
+    ui->prepareProgressBar->setValue(0);
+    //slave.startMetaGraphBuilder();
 
     return;
+}
+
+void Widget::metaGraphDone(int returnValue) {
+    //Check for errors
+    if(returnValue!=100) {
+        std::string text = "Error Code " + returnValue;
+        ui->label->setText(QString::fromStdString(text));
+        ui->prepareProgressBar->setValue(0);
+        return;
+    }
+    ui->label->setText("Done.");
+    return;
+}
+
+void Widget::metaGraphProgress(int percentProgress) {
+    ui->prepareProgressBar->setValue(percentProgress);
 }
 
 void Widget::pathfindingProgress(int percentProgress){
@@ -221,21 +254,35 @@ void Widget::pathfindingDone(int returnCode) {
         ui->sucessFailureLabel->setText("Error: Path empty!");
         return;
     }
-    double routeCost = navi.getShortestRouteCost();
+    //Get shortest path stats
+    double routeTime=navi.getShortestRouteTime()/60;
+    stringstream streamTime;
+    streamTime << std::fixed << std::setprecision(0) << routeTime;
+    string stringTime = streamTime.str();
+
+    double routeDist=navi.getShortestRouteDistance()/1000;
+    stringstream streamDist;
+    streamDist << fixed << setprecision(1) << routeDist;
+    string stringDist = streamDist.str();
+
+    std::string labelString = "Dist: " + stringDist + " km\nTime: " + stringTime + " min";
+    ui->routeDetailsLabel->setText(QString::fromStdString(labelString));
+    /*
     if (navi.getRoutingPrio()) {
         //Quickest path, so the cost is given in travel time, unit is seconds
         routeCost /= 60;    //In minutes
         long intCost = std::round(routeCost);
-        std::string cost = "Traveltime: " + std::to_string(intCost) + " min.";
+        std::string cost = "Travel Time: " + std::to_string(intCost) + " min.";
         ui->routeDetailsLabel->setText(QString::fromStdString(cost));
     }
     else {
         //Shortest Path in terms of travel distance, unit is meters
         routeCost /= 1000;    //In kilometers
         long intCost = std::round(routeCost);
-        std::string cost = "Traveltime: " + std::to_string(intCost) + " km.";
+        std::string cost = "Travel Distance: " + std::to_string(intCost) + " km.";
         ui->routeDetailsLabel->setText(QString::fromStdString(cost));
     }
+    */
     mapWidget->getGraphLayer().setGraph(path);
     mapWidget->update();
     mapWidget->setCenterLatitude(path.getNode(0).getLatitude());

@@ -57,7 +57,8 @@ public:
 
     void getFullGraph (LinearGraph &graph);
     void getShortestRouteGraph(LinearGraph &graph);
-    double getShortestRouteCost () { return pathfinder.getRouteCost(); }
+    double getShortestRouteDistance () { pathfinder.getRouteDistance(); }
+    double getShortestRouteTime () { pathfinder.getRouteTravelTime(); }
     bool getRoutingPrio() { return timeIsPrio; }
     bool isNavGraphParsed () { return fullGraphParsed; }
     bool isEGraphParsed () { return metaGraphParsed; }

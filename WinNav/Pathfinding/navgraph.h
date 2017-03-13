@@ -49,6 +49,8 @@ public:
     /* Closeness Tree preparation method: must be called once, before calling getClosestNode methods */
     void buildClosenessTree();
 
+    void clear();
+
 
 };
 

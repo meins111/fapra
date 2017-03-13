@@ -13,14 +13,10 @@ Slaver::Slaver(const Navi *navi, LinearGraph &path, QObject *parent) : QObject(p
 }*/
 
 void Slaver::startParsing(std::string &filePath) {
-    //Lock the mutex prior
-    std::unique_lock<std::mutex> uLock(condStruct.mtx);
     //Check if a parse thread is currently running
     if (worker.joinable()) {
         //We obviously want it to stop, so do a stopWorker() call to let it stop at the next moment
         stopWorker();
-        //There is already a process running, so we cannot run another process until the first has comnpleted
-        worker.join();
     }
     //Signal, that we want to parse, rather than search for a path
     parseFlag=true;
@@ -61,9 +57,59 @@ void Slaver::startPathfinding() {
     //Now start the pathfinding-worker thread
     worker=std::thread(&Navi::shortestPath, navi, startNode, targetNode, &condStruct);
 
+}
 
 
+void Slaver::startMetaGraphBuilder() {
+    //if the building is already running, ignore the new call!
+    if (metaBuilder.joinable() || metaListener.joinable()) {
+        return;
+    }
+    //Don't start the builder before the initial parsing is done
+    if (!navi->isNavGraphParsed()) {
+        return;
+    }
+    //Start up the listener
+    metaListener = std::thread(&Slaver::metaBuildListener, this);
+    //Then start the builder
+    metaBuilder = std::thread(&Navi::buildMetaGraph, navi, &condMetaStruct);
+}
 
+void Slaver::metaBuildListener() {
+    bool notDone = true;
+    int oldProgress=condMetaStruct.progress;
+    while (notDone) {
+        std::unique_lock<std::mutex> lock(condMetaStruct.mtx);
+        //Will immedietly lock the mutex upon creation
+        //We'll wait for a cond update and progress change
+        condMetaStruct.cond.wait(
+                    lock, [this, oldProgress]{return (condMetaStruct.progress!=oldProgress);}
+                    );
+        //At this point, something has changed and we have aquired the lock
+        //But the notify may only be issued to wake us up and show us we have to stop!
+        if(condMetaStruct.stopListening) {
+            //So, we have to stop!
+            return;
+        }
+        //No it was an actual change! What did happen while we were sleeping?
+        if (condMetaStruct.progress < 100 && condMetaStruct.progress >= 0) {
+            //An progress! emit a signal to notify the gui of this
+            emit(metaGraphProgress(condMetaStruct.progress));
+            continue;
+        }
+        else if (condMetaStruct.progress<0 || condMetaStruct.progress > 100) {
+            //This is an error!
+            emit(metaGraphDone(condMetaStruct.progress));
+            //Meta graph builder has reported an error, so shut down the listener as well
+            return;
+        }
+        else {
+            //We are done!
+            emit(metaGraphDone(condMetaStruct.progress));
+            //Meta graph is build correctly, so shut down the listener as well
+            return;
+        }
+    }
 }
 
 void Slaver::restartListener() {
@@ -187,8 +233,23 @@ void Slaver::setRange(double maxRange) {
 }
 */
 
+void Slaver::stopMetaThreads() {
+    std::unique_lock<std::mutex> uLock(condMetaStruct.mtx);
+    condMetaStruct.stopListening=true;
+    condMetaStruct.stopWorking=true;
+    condMetaStruct.cond.notify_all();
+    uLock.unlock();
+    if (metaListener.joinable()) {
+        metaListener.join();
+    }
+    if (metaBuilder.joinable()) {
+        metaBuilder.join();
+    }
+}
+
 Slaver::~Slaver() {
     //We want to make sure that all threads have stopped, so send stop signals to them!
     stopListener();
     stopWorker();
+    stopMetaThreads();
 }
