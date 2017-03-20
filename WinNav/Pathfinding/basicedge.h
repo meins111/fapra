@@ -6,9 +6,9 @@
 class BasicEdge : public Edge
 {
 public:
-    BasicEdge() : startNode(0xFFFFFFFF), endNode(0xFFFFFFFF), index(0xFFFFFFFF){}
-    BasicEdge(const BasicEdge &copy): startNode(copy.startNode), endNode(copy.endNode), index(copy.index){}
-    BasicEdge(size_t start, size_t end, size_t index): startNode(start), endNode(end), index(index){}
+    BasicEdge() : startNode(0xFFFFFFFF), endNode(0xFFFFFFFF), index(0xFFFFFFFF), edgeInfoId(0xFFFFFFFF){}
+    BasicEdge(const BasicEdge &copy): startNode(copy.startNode), endNode(copy.endNode), index(copy.index), edgeInfoId(copy.edgeInfoId){}
+    BasicEdge(size_t start, size_t end, size_t index, size_t infoID): startNode(start), endNode(end), index(index), edgeInfoId(infoID){}
     BasicEdge & operator= ( const BasicEdge & copy);
     bool operator< (const BasicEdge &otherOne);
 
@@ -22,6 +22,9 @@ public:
 
     //Own index informations - can be useful in a number of ways
     size_t index;
+
+    //Edge Info identifier: used to lookup additional edge informations in an external ressource
+    size_t edgeInfoId;
 };
 
 #endif // BASICEDGE_H

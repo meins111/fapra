@@ -56,7 +56,21 @@ void GraphLayer::paintNode(GeoPainter * painter, Node &node) {
 	GeoDataCoordinates coord(node.getLongitude(), node.getLatitude(), 0, GeoDataCoordinates::Degree);
 	painter->setPen( Qt::black );
 	painter->setBrush( Oxygen::hotOrange1 );
-	painter->drawEllipse(coord, 12, 12, false);
+    painter->drawEllipse(coord, 6, 6, false);
+}
+
+void GraphLayer::paintParkingSpot(Marble::GeoPainter *painter, Node &node) {
+    GeoDataCoordinates coord(node.getLongitude(), node.getLatitude(), 0, GeoDataCoordinates::Degree);
+    painter->setPen( Qt::black );
+    painter->setBrush( Oxygen::seaBlue1 );
+    painter->drawEllipse(coord, 12, 12, false);
+}
+
+void GraphLayer::paintWalkingNode(Marble::GeoPainter *painter, Node &node) {
+    GeoDataCoordinates coord(node.getLongitude(), node.getLatitude(), 0, GeoDataCoordinates::Degree);
+    painter->setPen( Qt::black );
+    painter->setBrush( Oxygen::emeraldGreen1 );
+    painter->drawEllipse(coord, 8, 8, false);
 }
 
 void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end) {
@@ -98,6 +112,34 @@ void GraphLayer::paintGraph(Marble::GeoPainter * painter) {
 		paintEdge( painter, start, end);
 
 	}
+}
+
+void GraphLayer::paintCarDriveGraph(Marble::GeoPainter *painter, bool parkingAtTarget) {
+    paintGraph(painter);
+    if (parkingAtTarget) {
+        //We park at the target, so the last node of the graph shall be depicted as a parking node
+        size_t edgeCnt = graph->numEdges();
+        Edge &lastEdge = graph->getEdge( edgeCnt - 1);
+        Node &end = graph->getNode( lastEdge.getEnd() );
+        paintParkingSpot(painter, end);
+    }
+}
+
+void GraphLayer::paintFootwalk(Marble::GeoPainter *painter) {
+    if(graph == NULL)
+        return;
+
+    size_t edges = graph->numEdges();
+    for(size_t i=0 ; i < edges ; ++i) {
+        Edge &edge = graph->getEdge(i);
+        Node &start = graph->getNode( edge.getStart() );
+        Node &end = graph->getNode( edge.getEnd() );
+
+        paintWalkingNode( painter, start);
+        paintWalkingNode( painter, end);
+        paintEdge( painter, start, end);
+
+    }
 }
 
 void GraphLayer::setGraph(Graph &graph) {

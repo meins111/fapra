@@ -14,10 +14,18 @@ struct NodeCloud {
     // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class
     inline double kdtree_distance(const double *p1, const size_t idx_p2,size_t /*size*/) const
     {
+        //Use the haversine distance as distance metrik
+        NodeInfo start;
+        start.longitude=p1[0];
+        start.latitude=p1[1];
+        const NodeInfo &target = nodeData[idx_p2];
+        return start.getHaversineDistanceTo(target);
+        /*
             const double d0=p1[0]-nodeData[idx_p2].longitude;
             const double d1=p1[1]-nodeData[idx_p2].latitude;
             ///TODO: This maybe should be the haversine distance instead for improves accurancy
             return d0*d0+d1*d1;
+        */
     }
 
     // Returns the dim'th component of the idx'th point in the class:

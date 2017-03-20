@@ -87,64 +87,80 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
     if(start==target) {
         done=true;
     }
+    try {
+        //Node counter, we start with the target node
+        size_t nodes=1;
+        while(!done) {
+            //current node has a predecessor? Then we are ether done or the map is broken!
+            if (predecessorMap.find(curNodeId)==predecessorMap.end()) {
+                //Are we done? This is: current = start node
+                if (curNodeId == start) {
+                    done = true;
+                    continue;
+                }
+                //This is not good. We are not yet done but the node has to pred entry
+                errorCode=PREDECESSOR_MAP_BROKEN;
+                if (updateStruct) {
+                    updateStruct->updateProgress(errorCode);
+                }
+                //Clear broken graph
+                route.reset();
+                //and exit
+                return;
+            }
+            //So there is a predecessor!
+            //Fetch its ID
+            predNodeId=predecessorMap[curNodeId];
+            //Fetch the pred Node
+            predNode = graph.nodeInfo.nodeData[predNodeId];
+            //Insert the predecessor into the route
+            route.insertNode(PODNode(predNode.longitude, predNode.latitude));
+            BasicEdge &curEdge = graph.getEdgeBetweenNodes(predNodeId, curNodeId);
+            //calcuate costs: distance & travel time
+            totalDistance+=graph.edgeCost[curEdge.index];
+            totalTime+=graph.getEdgeTravelTime(curEdge, curMaxSpeed);
+            //Store node ids along the way for later use
+            if (keepNavNodes) {
+                routeNavNodes.emplace_back(predNodeId);
+                routeNavEdges.emplace_back(curNodeId);
+            }
+            nodes++;
+            //Set cur = pred and continue
+            curNodeId=predNodeId;
+            curNode = predNode;
+        }
 
-    //Node counter, we start with the target node
-    size_t nodes=1;
-    while(!done) {
-        //current node has a predecessor? Then we are ether done or the map is broken!
-        if (predecessorMap.find(curNodeId)==predecessorMap.end()) {
-            //Are we done? This is: current = start node
-            if (curNodeId == start) {
-                done = true;
-                continue;
-            }
-            //This is not good. We are not yet done but the node has to pred entry
-            errorCode=PREDECESSOR_MAP_BROKEN;
-            if (updateStruct) {
-                updateStruct->updateProgress(errorCode);
-            }
-            //Clear broken graph
-            route.reset();
-            //and exit
-            return;
+        //All path nodes added, now construct the edges backwards
+        if (updateStruct) {
+            updateStruct->updateProgress(97);
         }
-        //So there is a predecessor!
-        //Fetch its ID
-        predNodeId=predecessorMap[curNodeId];
-        //Fetch the pred Node
-        predNode = graph.nodeInfo.nodeData[predNodeId];
-        //Insert the predecessor into the route
-        route.insertNode(PODNode(predNode.longitude, predNode.latitude));
-        EdgeInfo &curEdgeInfo = graph.edgeInfo[graph.getEdgeBetweenNodes(predNodeId, curNodeId)];
-        //calcuate costs: distance & travel time
-        totalDistance+=curEdgeInfo.distance;
-        totalTime+=curEdgeInfo.distance/std::min(curMaxSpeed, curEdgeInfo.speed);
-        //Store node ids along the way for later use
-        if (keepNavNodes) {
-            routeNavNodes.emplace_back(predNodeId);
-            routeNavEdges.emplace_back(curNodeId);
+        //insert edges : the first edge connects the last and the pre-last node (the start node and his first successor)
+        for (size_t i=0; i<nodes-1; i++) {
+            size_t start=nodes-1-i;
+            size_t end = nodes-1-i-1;
+            route.insertEdge(PODEdge(start, end));
         }
-        nodes++;
-        //Set cur = pred and continue
-        curNodeId=predNodeId;
-        curNode = predNode;
+        /* Debug Print to check edge properties, espacially the speed tag which was problematic for some time*/
+        //Print the edge infos of all path edges
+        /*
+        for (long i=routeNavEdges.size()-1; i>0; i--) {
+            BasicEdge &cur = graph.connectGraph.edges[routeNavEdges[i]];
+            graph.edgeInfo[cur.edgeInfoId].print();
+        }
+        */
+
     }
-    //All path nodes added, now construct the edges backwards
-    if (updateStruct) {
-        updateStruct->updateProgress(97);
+    catch (std::invalid_argument e) {
+        //An edge is missing
+        routeIsBuild=false;
+        errorCode=BUILDING_THE_PATH_FAILED;
+        route.reset();
+        if (updateStruct)
+            updateStruct->updateProgress(BUILDING_THE_PATH_FAILED);
+        return;
+
     }
-    //insert edges : the first edge connects the last and the pre-last node (the start node and his first successor)
-    for (size_t i=0; i<nodes-1; i++) {
-        size_t start=nodes-1-i;
-        size_t end = nodes-1-i-1;
-        route.insertEdge(PODEdge(start, end));
-    }
-    /* Debug Print to check edge properties, espacially the speed tag which was problematic for some time
-    //Print the edge infos of all path edges
-    for (long i=routeNavEdges.size()-1; i>0; i--) {
-        graph.edgeInfo[routeNavEdges[i]].print();
-    }
-    */
+    //Exception free -> build successful -> notify
     errorCode=0;
     //Route building complete: update
     if (updateStruct) {
@@ -209,15 +225,6 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
         openSet.erase(current.id);
         //Add its node ID to closed set
         closedSet.emplace (current.id);
-        //Check if we crossed the maxReach boundary with this node
-        if (isMaxRangeSet) {
-            if (current.gScore > maxRange) {
-                //This node may not further be expanded, since it's total travel distance is greater than the maximum travel range
-                //Skip this node and check the next
-                //NOTE: This also applies if the fetched node is the target, since we would not (barely) reach it!
-                continue;
-            }
-        }
         //Is this the target node?
         if (current.id == target) {
             errorCode=0;
@@ -252,15 +259,16 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 //Check the next adjacent node
                 continue;
             }
-            EdgeInfo &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
+            BasicEdge &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
+            EdgeInfo &adjacentEdgeInfo = graph.edgeInfo[adjacentEdge.edgeInfoId];
             //Check if the current travel medium is allowed to travel on this edge at all
-            if (adjacentEdge.allowance & curMedium == 0x00) {
+            if (adjacentEdgeInfo.allowance & curMedium == 0x00) {
                 //Medium not allowed on this edge -> skip
                 continue;
             }
             //Fetch the actual cost to reach the adjacent node from the current node
             ///TODO: edgeCost testen/überarbeiten!!!
-            double curCost = current.gScore + adjacentEdge.getEdgeCost(timeIsPrio, curMaxSpeed);
+            double curCost = current.gScore + graph.getEdgeCost(adjacentEdge, timeIsPrio, curMaxSpeed);
             //Now we check the following:
             //A) if the adjacent node is unknown, we add it to the open list
             //B) if it was already known but we do know a better way to reach it already we just skip that node
@@ -314,11 +322,11 @@ bool AStar::checkGraph() {
     if (graph.connectGraph.edges.size()<1) {
         return false;
     }
-    //EdgeInfo size must equal edge size
-    if (graph.edgeInfo.size() != graph.connectGraph.edges.size()) {
+    //Each node has to have a corresponding edgeCost entry
+    if (graph.edgeCost.size() != graph.connectGraph.edges.size()) {
         return false;
     }
-    //Same goes for node and nodeInfo size
+    //nonnect graph nodes must have the same length as the node info vector, otherwise something is fishy!
     if(graph.nodeInfo.nodeData.size() != graph.connectGraph.nodes.size()) {
         return false;
     }

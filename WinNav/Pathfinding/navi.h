@@ -18,6 +18,8 @@
 #include <Utils/condwait_t.h>
 #include <TestGraph/lineargraph.h>
 #include "astar.h"
+#include "Utils/ErrorCodes.h"
+#include "Utils/OsmFilterContainer.h"
 //osmpbf includes
 #include <osmpbf/parsehelpers.h>
 #include <osmpbf/filter.h>
@@ -33,12 +35,13 @@
 #define OSM_HIGHWAY_TYPES 27
 
 
-
-
+////// NAVI CLASS //////
+/// \brief The Navi class is the central navigation class for this pathfinding project
+///
 class Navi
 {
 public:
-    Navi() : pathfinder(fullGraph), fullGraph(), fullGraphParsed(false), metaGraph(), metaGraphParsed(false),
+    Navi() : pathfinder(fullGraph), fullGraph(), fullGraphParsed(false), parkingGraph(),
         medium(CAR), timeIsPrio(true), maxRange(0), startRange(0){}
 
     //void parsePbfFile(const std::string &path);
@@ -46,9 +49,6 @@ public:
 
     //Actual Routing from a start node to a target node
     void shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct);
-
-    //Method to complete the metaGraph structure in the background
-    void buildMetaGraph(CondWait_t *updateStruct);
 
     void setTravelMedium (const TravelMedium medium);
     void setMaxRange(const size_t range);
@@ -61,7 +61,6 @@ public:
     double getShortestRouteTime () { pathfinder.getRouteTravelTime(); }
     bool getRoutingPrio() { return timeIsPrio; }
     bool isNavGraphParsed () { return fullGraphParsed; }
-    bool isEGraphParsed () { return metaGraphParsed; }
 
     void reset();
 
@@ -69,13 +68,14 @@ protected:
     //The actual pathfinding implementation
     AStar pathfinder;
 
-    //The full street network: not meta-edges allowed
+    //The full street network
     NavGraph fullGraph;
     bool fullGraphParsed;
 
-    //The meta graph containing only shortest-path-connected charge station nodes (most likely via meta-edges)
-    NavGraph metaGraph;
-    bool metaGraphParsed;
+    //Uses an extra navgraph to store parking informations
+    NavGraph parkingGraph;
+    //Parking area nodes
+    std::vector<ParkingSolution> parkingNodeInfo;
 
 
     //Lookup to match the EdgeType and its String representation

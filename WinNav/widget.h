@@ -45,6 +45,7 @@ public slots:
 	void mouseClickGeoPosition (qreal lon, qreal lat, Marble::GeoDataCoordinates::Unit);
     void startRouting();
     void loadPushed();
+    void parkingToggle();
     //void on_pushButton_clicked();
 
     void parseProgress(int percentProgress);
@@ -52,9 +53,6 @@ public slots:
 
     void pathfindingProgress(int percentProgress);
     void pathfindingDone(int returnCode);
-
-    void metaGraphProgress(int percentProgress);
-    void metaGraphDone(int returnValue);
 
 private slots:
     void on_showGraph_clicked();

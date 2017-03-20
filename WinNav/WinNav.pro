@@ -51,7 +51,8 @@ SOURCES +=        main.cpp\
     Utils/easylogging++.cc \
     GraphInterface/pointofinterest.cpp \
     stopworkingexception.cpp \
-    Pathfinding/astar.cpp
+    Pathfinding/astar.cpp \
+    Pathfinding/ParkingSolution.cpp
 
 
 HEADERS  += widget.h\
@@ -85,7 +86,9 @@ HEADERS  += widget.h\
     GraphInterface/pointofinterest.h \
     stopworkingexception.h \
     Pathfinding/astar.h \
-    Utils/ErrorCodes.h
+    Utils/ErrorCodes.h \
+    Pathfinding/ParkingSolution.h \
+    Utils/OsmFilterContainer.h
 
 FORMS    += widget.ui
 

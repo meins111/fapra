@@ -20,9 +20,7 @@ public:
             startNodeSet(false), targetNodeSet(false){}
     void startParsing(std::string &filePath);
     void startPathfinding();
-    void startMetaGraphBuilder();
     void stopListener();
-    void stopMetaThreads();
     void restartListener();
     void stopWorker();
 
@@ -40,18 +38,14 @@ protected:
     LinearGraph path;
 
     CondWait_t condStruct;
-    CondWait_t condMetaStruct;
     bool parseFlag;
 
     std::thread worker;
     std::thread listener;
-    std::thread metaListener;
-    std::thread metaBuilder;
 
     el::Logger* logger;
 
     void listenAndPropagate();
-    void metaBuildListener();
 
     //Local copy of the start/target nodes
     PODNode startNode, targetNode;
@@ -65,9 +59,6 @@ signals:
 
     void pathfindingProgress(int percentProgress);
     void pathfindingDone(int successFlag);
-
-    void metaGraphProgress(int percentProgress);
-    void metaGraphDone(int successFlag);
 
 };
 

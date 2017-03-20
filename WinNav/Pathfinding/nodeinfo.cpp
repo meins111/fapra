@@ -22,6 +22,8 @@ NodeInfo & NodeInfo::operator= ( const NodeInfo & copy) {
    latitude=copy.latitude;
    isChargeStation=copy.isChargeStation;
    osmID=copy.osmID;
+   allowsParking=copy.allowsParking;    
    localID=copy.localID;
+   parkingPropertyID=copy.parkingPropertyID;
    return *this;
 }

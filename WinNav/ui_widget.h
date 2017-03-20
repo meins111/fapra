@@ -53,13 +53,12 @@ public:
     QPushButton *calculateButton;
     QProgressBar *routingProgressBar;
     QLabel *routeDetailsLabel;
-    QWidget *ecar;
-    QCheckBox *isECar;
-    QLineEdit *ecarReach;
-    QLabel *ecarReachLabel;
-    QComboBox *reachUnit;
-    QProgressBar *prepareProgressBar;
-    QLabel *label;
+    QWidget *parking;
+    QCheckBox *parkingEnableBox;
+    QCheckBox *freeParkingBox;
+    QComboBox *parkingAllowanceComboBox;
+    QLabel *parkingTypeLabel;
+    QLabel *parkingResultLabel;
     QWidget *Settings;
     QLineEdit *filePath;
     QPushButton *loadFile;
@@ -175,28 +174,25 @@ public:
         gridLayout_3->addLayout(gridLayout, 0, 0, 1, 2);
 
         tabWidget->addTab(route, QString());
-        ecar = new QWidget();
-        ecar->setObjectName(QStringLiteral("ecar"));
-        isECar = new QCheckBox(ecar);
-        isECar->setObjectName(QStringLiteral("isECar"));
-        isECar->setGeometry(QRect(10, 10, 121, 20));
-        ecarReach = new QLineEdit(ecar);
-        ecarReach->setObjectName(QStringLiteral("ecarReach"));
-        ecarReach->setGeometry(QRect(100, 50, 251, 22));
-        ecarReachLabel = new QLabel(ecar);
-        ecarReachLabel->setObjectName(QStringLiteral("ecarReachLabel"));
-        ecarReachLabel->setGeometry(QRect(10, 50, 81, 16));
-        reachUnit = new QComboBox(ecar);
-        reachUnit->setObjectName(QStringLiteral("reachUnit"));
-        reachUnit->setGeometry(QRect(360, 50, 72, 22));
-        prepareProgressBar = new QProgressBar(ecar);
-        prepareProgressBar->setObjectName(QStringLiteral("prepareProgressBar"));
-        prepareProgressBar->setGeometry(QRect(310, 110, 118, 23));
-        prepareProgressBar->setValue(24);
-        label = new QLabel(ecar);
-        label->setObjectName(QStringLiteral("label"));
-        label->setGeometry(QRect(206, 110, 101, 20));
-        tabWidget->addTab(ecar, QString());
+        parking = new QWidget();
+        parking->setObjectName(QStringLiteral("parking"));
+        parkingEnableBox = new QCheckBox(parking);
+        parkingEnableBox->setObjectName(QStringLiteral("parkingEnableBox"));
+        parkingEnableBox->setGeometry(QRect(10, 30, 92, 23));
+        freeParkingBox = new QCheckBox(parking);
+        freeParkingBox->setObjectName(QStringLiteral("freeParkingBox"));
+        freeParkingBox->setGeometry(QRect(30, 60, 121, 23));
+        parkingAllowanceComboBox = new QComboBox(parking);
+        parkingAllowanceComboBox->setObjectName(QStringLiteral("parkingAllowanceComboBox"));
+        parkingAllowanceComboBox->setGeometry(QRect(160, 90, 86, 25));
+        parkingTypeLabel = new QLabel(parking);
+        parkingTypeLabel->setObjectName(QStringLiteral("parkingTypeLabel"));
+        parkingTypeLabel->setGeometry(QRect(50, 90, 81, 17));
+        parkingTypeLabel->setTextFormat(Qt::AutoText);
+        parkingResultLabel = new QLabel(parking);
+        parkingResultLabel->setObjectName(QStringLiteral("parkingResultLabel"));
+        parkingResultLabel->setGeometry(QRect(260, 10, 191, 111));
+        tabWidget->addTab(parking, QString());
         Settings = new QWidget();
         Settings->setObjectName(QStringLiteral("Settings"));
         filePath = new QLineEdit(Settings);
@@ -229,7 +225,7 @@ public:
 
         retranslateUi(Widget);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(Widget);
@@ -262,14 +258,18 @@ public:
         calculateButton->setText(QApplication::translate("Widget", "Route berechnen", 0));
         routeDetailsLabel->setText(QString());
         tabWidget->setTabText(tabWidget->indexOf(route), QApplication::translate("Widget", "Route", 0));
-        isECar->setText(QApplication::translate("Widget", "Route f\303\274r E-Car", 0));
-        ecarReachLabel->setText(QApplication::translate("Widget", "Reichweite", 0));
-        reachUnit->clear();
-        reachUnit->insertItems(0, QStringList()
-         << QApplication::translate("Widget", "Km", 0)
+        parkingEnableBox->setText(QApplication::translate("Widget", "Parking", 0));
+        freeParkingBox->setText(QApplication::translate("Widget", "Free Parking", 0));
+        parkingAllowanceComboBox->clear();
+        parkingAllowanceComboBox->insertItems(0, QStringList()
+         << QApplication::translate("Widget", "Public", 0)
+         << QApplication::translate("Widget", "Time-Constraint", 0)
+         << QApplication::translate("Widget", "Private", 0)
+         << QApplication::translate("Widget", "Customer", 0)
         );
-        label->setText(QApplication::translate("Widget", "Preparations", 0));
-        tabWidget->setTabText(tabWidget->indexOf(ecar), QApplication::translate("Widget", "E-Car", 0));
+        parkingTypeLabel->setText(QApplication::translate("Widget", "Allowance", 0));
+        parkingResultLabel->setText(QString());
+        tabWidget->setTabText(tabWidget->indexOf(parking), QApplication::translate("Widget", "Parking", 0));
         filePath->setText(QApplication::translate("Widget", ".../Path to OSM.pbf File", 0));
         loadFile->setText(QApplication::translate("Widget", "Parse File", 0));
         statusLabel->setText(QApplication::translate("Widget", "Status:", 0));

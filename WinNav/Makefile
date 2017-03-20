@@ -72,7 +72,8 @@ SOURCES       = main.cpp \
 		Utils/easylogging++.cc \
 		GraphInterface/pointofinterest.cpp \
 		stopworkingexception.cpp \
-		Pathfinding/astar.cpp moc_widget.cpp \
+		Pathfinding/astar.cpp \
+		Pathfinding/ParkingSolution.cpp moc_widget.cpp \
 		moc_slaver.cpp
 OBJECTS       = main.o \
 		widget.o \
@@ -99,6 +100,7 @@ OBJECTS       = main.o \
 		pointofinterest.o \
 		stopworkingexception.o \
 		astar.o \
+		ParkingSolution.o \
 		moc_widget.o \
 		moc_slaver.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -194,7 +196,9 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		GraphInterface/pointofinterest.h \
 		stopworkingexception.h \
 		Pathfinding/astar.h \
-		Utils/ErrorCodes.h main.cpp \
+		Utils/ErrorCodes.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h main.cpp \
 		widget.cpp \
 		GraphInterface/Node.cpp \
 		GraphInterface/Edge.cpp \
@@ -218,7 +222,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		Utils/easylogging++.cc \
 		GraphInterface/pointofinterest.cpp \
 		stopworkingexception.cpp \
-		Pathfinding/astar.cpp
+		Pathfinding/astar.cpp \
+		Pathfinding/ParkingSolution.cpp
 QMAKE_TARGET  = WinNav
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = WinNav
@@ -398,8 +403,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents widget.h GraphLayer/GraphLayer.h TestGraph/PODEdge.h TestGraph/PODNode.h TestGraph/TestGraph.h MapWidget/MapWidget.h backup/ui_widget.h GraphInterface/Edge.h GraphInterface/Graph.h GraphInterface/Node.h ui_widget.h Pathfinding/basicgraph.h Pathfinding/basicnode.h Pathfinding/basicedge.h Pathfinding/nodeinfo.h Pathfinding/edgeinfo.h Pathfinding/allowancemasks.h Pathfinding/roadtypes.h Pathfinding/closenesstree.h Pathfinding/navgraph.h Pathfinding/navi.h Pathfinding/pathfinder.h Utils/inplacevectorreorder.h TestGraph/lineargraph.h Utils/slaver.h Utils/condwait_t.h Utils/easylogging++.h GraphInterface/pointofinterest.h stopworkingexception.h Pathfinding/astar.h Utils/ErrorCodes.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp widget.cpp GraphInterface/Node.cpp GraphInterface/Edge.cpp GraphInterface/Graph.cpp GraphLayer/GraphLayer.cpp TestGraph/PODEdge.cpp TestGraph/PODNode.cpp TestGraph/TestGraph.cpp MapWidget/MapWidget.cpp Pathfinding/basicgraph.cpp Pathfinding/basicnode.cpp Pathfinding/basicedge.cpp Pathfinding/nodeinfo.cpp Pathfinding/edgeinfo.cpp Pathfinding/navgraph.cpp Pathfinding/navi.cpp Pathfinding/pathfinder.cpp Utils/inplacevectorreorder.cpp TestGraph/lineargraph.cpp Utils/slaver.cpp Utils/easylogging++.cc GraphInterface/pointofinterest.cpp stopworkingexception.cpp Pathfinding/astar.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents widget.h GraphLayer/GraphLayer.h TestGraph/PODEdge.h TestGraph/PODNode.h TestGraph/TestGraph.h MapWidget/MapWidget.h backup/ui_widget.h GraphInterface/Edge.h GraphInterface/Graph.h GraphInterface/Node.h ui_widget.h Pathfinding/basicgraph.h Pathfinding/basicnode.h Pathfinding/basicedge.h Pathfinding/nodeinfo.h Pathfinding/edgeinfo.h Pathfinding/allowancemasks.h Pathfinding/roadtypes.h Pathfinding/closenesstree.h Pathfinding/navgraph.h Pathfinding/navi.h Pathfinding/pathfinder.h Utils/inplacevectorreorder.h TestGraph/lineargraph.h Utils/slaver.h Utils/condwait_t.h Utils/easylogging++.h GraphInterface/pointofinterest.h stopworkingexception.h Pathfinding/astar.h Utils/ErrorCodes.h Pathfinding/ParkingSolution.h Utils/OsmFilterContainer.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp widget.cpp GraphInterface/Node.cpp GraphInterface/Edge.cpp GraphInterface/Graph.cpp GraphLayer/GraphLayer.cpp TestGraph/PODEdge.cpp TestGraph/PODNode.cpp TestGraph/TestGraph.cpp MapWidget/MapWidget.cpp Pathfinding/basicgraph.cpp Pathfinding/basicnode.cpp Pathfinding/basicedge.cpp Pathfinding/nodeinfo.cpp Pathfinding/edgeinfo.cpp Pathfinding/navgraph.cpp Pathfinding/navi.cpp Pathfinding/pathfinder.cpp Utils/inplacevectorreorder.cpp TestGraph/lineargraph.cpp Utils/slaver.cpp Utils/easylogging++.cc GraphInterface/pointofinterest.cpp stopworkingexception.cpp Pathfinding/astar.cpp Pathfinding/ParkingSolution.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents widget.ui $(DISTDIR)/
 
 
@@ -439,18 +444,8 @@ moc_widget.cpp: MapWidget/MapWidget.h \
 		Pathfinding/basicnode.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/nodeinfo.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/allowancemasks.h \
-		Pathfinding/navgraph.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Utils/inplacevectorreorder.h \
-		Utils/condwait_t.h \
-		stopworkingexception.h \
-		TestGraph/lineargraph.h \
-		Pathfinding/astar.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
 		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
 		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
 		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
@@ -472,9 +467,21 @@ moc_widget.cpp: MapWidget/MapWidget.h \
 		../osmpbf/osmpbf/include/osmpbf/inode.h \
 		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/allowancemasks.h \
+		Pathfinding/navgraph.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Utils/inplacevectorreorder.h \
+		Utils/condwait_t.h \
+		stopworkingexception.h \
+		TestGraph/lineargraph.h \
+		Pathfinding/astar.h \
+		Utils/ErrorCodes.h \
 		Utils/slaver.h \
 		logwriter.h \
-		Utils/ErrorCodes.h \
 		widget.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/jochen/Dokumente/Uni/osm_fapra/WinNav -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf/osmpbf/include -I/usr/include/google/protobuf -I/usr/lib/x86_64-linux-gnu -I/usr/include -I/home/jochen/Dokumente/Uni/osm_fapra/nanoflann/include -I/usr/local/boost_1_63_0 -I/usr/lib/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include widget.h -o moc_widget.cpp
 
@@ -489,17 +496,8 @@ moc_slaver.cpp: TestGraph/lineargraph.h \
 		Pathfinding/basicnode.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/nodeinfo.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/allowancemasks.h \
-		Pathfinding/navgraph.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Utils/inplacevectorreorder.h \
-		Utils/condwait_t.h \
-		stopworkingexception.h \
-		Pathfinding/astar.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
 		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
 		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
 		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
@@ -521,8 +519,19 @@ moc_slaver.cpp: TestGraph/lineargraph.h \
 		../osmpbf/osmpbf/include/osmpbf/inode.h \
 		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
-		logwriter.h \
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/allowancemasks.h \
+		Pathfinding/navgraph.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Utils/inplacevectorreorder.h \
+		Utils/condwait_t.h \
+		stopworkingexception.h \
+		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
+		logwriter.h \
 		Utils/slaver.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/jochen/Dokumente/Uni/osm_fapra/WinNav -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf/osmpbf/include -I/usr/include/google/protobuf -I/usr/lib/x86_64-linux-gnu -I/usr/include -I/home/jochen/Dokumente/Uni/osm_fapra/nanoflann/include -I/usr/local/boost_1_63_0 -I/usr/lib/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include Utils/slaver.h -o moc_slaver.cpp
 
@@ -558,18 +567,8 @@ main.o: main.cpp widget.h \
 		Pathfinding/basicnode.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/nodeinfo.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/allowancemasks.h \
-		Pathfinding/navgraph.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Utils/inplacevectorreorder.h \
-		Utils/condwait_t.h \
-		stopworkingexception.h \
-		TestGraph/lineargraph.h \
-		Pathfinding/astar.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
 		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
 		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
 		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
@@ -591,9 +590,21 @@ main.o: main.cpp widget.h \
 		../osmpbf/osmpbf/include/osmpbf/inode.h \
 		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/allowancemasks.h \
+		Pathfinding/navgraph.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Utils/inplacevectorreorder.h \
+		Utils/condwait_t.h \
+		stopworkingexception.h \
+		TestGraph/lineargraph.h \
+		Pathfinding/astar.h \
+		Utils/ErrorCodes.h \
 		Utils/slaver.h \
-		logwriter.h \
-		Utils/ErrorCodes.h
+		logwriter.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 widget.o: widget.cpp widget.h \
@@ -610,18 +621,8 @@ widget.o: widget.cpp widget.h \
 		Pathfinding/basicnode.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/nodeinfo.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/allowancemasks.h \
-		Pathfinding/navgraph.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Utils/inplacevectorreorder.h \
-		Utils/condwait_t.h \
-		stopworkingexception.h \
-		TestGraph/lineargraph.h \
-		Pathfinding/astar.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
 		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
 		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
 		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
@@ -643,9 +644,21 @@ widget.o: widget.cpp widget.h \
 		../osmpbf/osmpbf/include/osmpbf/inode.h \
 		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/allowancemasks.h \
+		Pathfinding/navgraph.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Utils/inplacevectorreorder.h \
+		Utils/condwait_t.h \
+		stopworkingexception.h \
+		TestGraph/lineargraph.h \
+		Pathfinding/astar.h \
+		Utils/ErrorCodes.h \
 		Utils/slaver.h \
 		logwriter.h \
-		Utils/ErrorCodes.h \
 		ui_widget.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o widget.o widget.cpp
 
@@ -707,51 +720,9 @@ basicedge.o: Pathfinding/basicedge.cpp Pathfinding/basicedge.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o basicedge.o Pathfinding/basicedge.cpp
 
 nodeinfo.o: Pathfinding/nodeinfo.cpp Pathfinding/nodeinfo.h \
-		GraphInterface/Node.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o nodeinfo.o Pathfinding/nodeinfo.cpp
-
-edgeinfo.o: Pathfinding/edgeinfo.cpp Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o edgeinfo.o Pathfinding/edgeinfo.cpp
-
-navgraph.o: Pathfinding/navgraph.cpp Pathfinding/navgraph.h \
-		GraphInterface/Graph.h \
 		GraphInterface/Node.h \
-		GraphInterface/Edge.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Pathfinding/nodeinfo.h \
-		Pathfinding/basicgraph.h \
-		Pathfinding/basicedge.h \
-		Pathfinding/basicnode.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o navgraph.o Pathfinding/navgraph.cpp
-
-navi.o: Pathfinding/navi.cpp Pathfinding/navi.h \
-		Pathfinding/basicedge.h \
-		GraphInterface/Graph.h \
-		GraphInterface/Node.h \
-		GraphInterface/Edge.h \
-		Pathfinding/basicnode.h \
-		Pathfinding/basicgraph.h \
-		Pathfinding/nodeinfo.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/allowancemasks.h \
-		Pathfinding/navgraph.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Utils/inplacevectorreorder.h \
-		Utils/condwait_t.h \
-		stopworkingexception.h \
-		TestGraph/lineargraph.h \
-		TestGraph/PODEdge.h \
-		TestGraph/PODNode.h \
-		Pathfinding/astar.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
 		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
 		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
 		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
@@ -773,6 +744,97 @@ navi.o: Pathfinding/navi.cpp Pathfinding/navi.h \
 		../osmpbf/osmpbf/include/osmpbf/inode.h \
 		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o nodeinfo.o Pathfinding/nodeinfo.cpp
+
+edgeinfo.o: Pathfinding/edgeinfo.cpp Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o edgeinfo.o Pathfinding/edgeinfo.cpp
+
+navgraph.o: Pathfinding/navgraph.cpp Pathfinding/navgraph.h \
+		GraphInterface/Graph.h \
+		GraphInterface/Node.h \
+		GraphInterface/Edge.h \
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Pathfinding/nodeinfo.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
+		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
+		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
+		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
+		../osmpbf/osmpbf/include/osmpbf/typelimits.h \
+		../osmpbf/osmpbf/include/osmpbf/pbf_prototypes.h \
+		../osmpbf/osmpbf/include/osmpbf/primitiveblockinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/common_input.h \
+		../osmpbf/osmpbf/include/osmpbf/common.h \
+		../osmpbf/generics/fielditerator.h \
+		../osmpbf/osmpbf/include/osmpbf/dataindex.h \
+		../osmpbf/osmpbf/include/osmpbf/filter.h \
+		../osmpbf/generics/macros.h \
+		../osmpbf/generics/refcountobject.h \
+		../osmpbf/osmpbf/include/osmpbf/iway.h \
+		../osmpbf/osmpbf/include/osmpbf/iprimitive.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractprimitiveinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/iinfo.h \
+		../osmpbf/osmpbf/include/osmpbf/wayinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/inode.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
+		Pathfinding/basicgraph.h \
+		Pathfinding/basicedge.h \
+		Pathfinding/basicnode.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o navgraph.o Pathfinding/navgraph.cpp
+
+navi.o: Pathfinding/navi.cpp Pathfinding/navi.h \
+		Pathfinding/basicedge.h \
+		GraphInterface/Graph.h \
+		GraphInterface/Node.h \
+		GraphInterface/Edge.h \
+		Pathfinding/basicnode.h \
+		Pathfinding/basicgraph.h \
+		Pathfinding/nodeinfo.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
+		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
+		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
+		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
+		../osmpbf/osmpbf/include/osmpbf/typelimits.h \
+		../osmpbf/osmpbf/include/osmpbf/pbf_prototypes.h \
+		../osmpbf/osmpbf/include/osmpbf/primitiveblockinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/common_input.h \
+		../osmpbf/osmpbf/include/osmpbf/common.h \
+		../osmpbf/generics/fielditerator.h \
+		../osmpbf/osmpbf/include/osmpbf/dataindex.h \
+		../osmpbf/osmpbf/include/osmpbf/filter.h \
+		../osmpbf/generics/macros.h \
+		../osmpbf/generics/refcountobject.h \
+		../osmpbf/osmpbf/include/osmpbf/iway.h \
+		../osmpbf/osmpbf/include/osmpbf/iprimitive.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractprimitiveinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/iinfo.h \
+		../osmpbf/osmpbf/include/osmpbf/wayinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/inode.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/allowancemasks.h \
+		Pathfinding/navgraph.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Utils/inplacevectorreorder.h \
+		Utils/condwait_t.h \
+		stopworkingexception.h \
+		TestGraph/lineargraph.h \
+		TestGraph/PODEdge.h \
+		TestGraph/PODNode.h \
+		Pathfinding/astar.h \
+		Utils/ErrorCodes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o navi.o Pathfinding/navi.cpp
 
 pathfinder.o: Pathfinding/pathfinder.cpp Pathfinding/pathfinder.h
@@ -801,17 +863,8 @@ slaver.o: Utils/slaver.cpp Utils/slaver.h \
 		Pathfinding/basicnode.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/nodeinfo.h \
-		Pathfinding/edgeinfo.h \
-		Pathfinding/roadtypes.h \
-		Utils/easylogging++.h \
-		Pathfinding/allowancemasks.h \
-		Pathfinding/navgraph.h \
-		Pathfinding/closenesstree.h \
-		../nanoflann/include/nanoflann.hpp \
-		Utils/inplacevectorreorder.h \
-		Utils/condwait_t.h \
-		stopworkingexception.h \
-		Pathfinding/astar.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
 		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
 		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
 		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
@@ -833,8 +886,19 @@ slaver.o: Utils/slaver.cpp Utils/slaver.h \
 		../osmpbf/osmpbf/include/osmpbf/inode.h \
 		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
-		logwriter.h \
-		Utils/ErrorCodes.h
+		Pathfinding/edgeinfo.h \
+		Pathfinding/roadtypes.h \
+		Utils/easylogging++.h \
+		Pathfinding/allowancemasks.h \
+		Pathfinding/navgraph.h \
+		Pathfinding/closenesstree.h \
+		../nanoflann/include/nanoflann.hpp \
+		Utils/inplacevectorreorder.h \
+		Utils/condwait_t.h \
+		stopworkingexception.h \
+		Pathfinding/astar.h \
+		Utils/ErrorCodes.h \
+		logwriter.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o slaver.o Utils/slaver.cpp
 
 easylogging++.o: Utils/easylogging++.cc Utils/easylogging++.h
@@ -857,6 +921,29 @@ astar.o: Pathfinding/astar.cpp Pathfinding/astar.h \
 		Pathfinding/closenesstree.h \
 		../nanoflann/include/nanoflann.hpp \
 		Pathfinding/nodeinfo.h \
+		Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
+		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
+		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
+		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
+		../osmpbf/osmpbf/include/osmpbf/typelimits.h \
+		../osmpbf/osmpbf/include/osmpbf/pbf_prototypes.h \
+		../osmpbf/osmpbf/include/osmpbf/primitiveblockinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/common_input.h \
+		../osmpbf/osmpbf/include/osmpbf/common.h \
+		../osmpbf/generics/fielditerator.h \
+		../osmpbf/osmpbf/include/osmpbf/dataindex.h \
+		../osmpbf/osmpbf/include/osmpbf/filter.h \
+		../osmpbf/generics/macros.h \
+		../osmpbf/generics/refcountobject.h \
+		../osmpbf/osmpbf/include/osmpbf/iway.h \
+		../osmpbf/osmpbf/include/osmpbf/iprimitive.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractprimitiveinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/iinfo.h \
+		../osmpbf/osmpbf/include/osmpbf/wayinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/inode.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/basicedge.h \
 		Pathfinding/basicnode.h \
@@ -865,8 +952,34 @@ astar.o: Pathfinding/astar.cpp Pathfinding/astar.h \
 		TestGraph/PODNode.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
+		Utils/ErrorCodes.h \
 		Pathfinding/allowancemasks.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o astar.o Pathfinding/astar.cpp
+
+ParkingSolution.o: Pathfinding/ParkingSolution.cpp Pathfinding/ParkingSolution.h \
+		Utils/OsmFilterContainer.h \
+		../osmpbf/osmpbf/include/osmpbf/parsehelpers.h \
+		../osmpbf/osmpbf/include/osmpbf/osmfilein.h \
+		../osmpbf/osmpbf/include/osmpbf/blobdata.h \
+		../osmpbf/osmpbf/include/osmpbf/typelimits.h \
+		../osmpbf/osmpbf/include/osmpbf/pbf_prototypes.h \
+		../osmpbf/osmpbf/include/osmpbf/primitiveblockinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/common_input.h \
+		../osmpbf/osmpbf/include/osmpbf/common.h \
+		../osmpbf/generics/fielditerator.h \
+		../osmpbf/osmpbf/include/osmpbf/dataindex.h \
+		../osmpbf/osmpbf/include/osmpbf/filter.h \
+		../osmpbf/generics/macros.h \
+		../osmpbf/generics/refcountobject.h \
+		../osmpbf/osmpbf/include/osmpbf/iway.h \
+		../osmpbf/osmpbf/include/osmpbf/iprimitive.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractprimitiveinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/iinfo.h \
+		../osmpbf/osmpbf/include/osmpbf/wayinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/inode.h \
+		../osmpbf/osmpbf/include/osmpbf/abstractnodeinputadaptor.h \
+		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ParkingSolution.o Pathfinding/ParkingSolution.cpp
 
 moc_widget.o: moc_widget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_widget.o moc_widget.cpp

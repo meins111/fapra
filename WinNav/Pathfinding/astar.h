@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include "Utils/condwait_t.h"
 #include "Utils/easylogging++.h"
+#include "Utils/ErrorCodes.h"
 #include "allowancemasks.h"
 #include <cmath>
 
@@ -16,12 +17,6 @@
 #define MAXSPEED_BIKE_MPS 15*0.27778
 #define MAXSPEED_FOOT_MPS 6*0.27778
 
-//Define some Error Codes
-#define TARGET_UNREACHABLE_ERROR        -16
-#define EMPTY_GRAPH_ERROR               -17
-#define PARAMETER_OUT_OF_BOUNDS         -18
-#define PREDECESSOR_MAP_EMPTY           -19
-#define PREDECESSOR_MAP_BROKEN          -20
 
 struct OpenNode_t {
     //Node ID in the graph -> used to access node informations

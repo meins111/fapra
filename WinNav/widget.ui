@@ -20,7 +20,7 @@
       <item row="0" column="1">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="route">
          <attribute name="title">
@@ -160,85 +160,93 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="ecar">
+        <widget class="QWidget" name="parking">
          <attribute name="title">
-          <string>E-Car</string>
+          <string>Parking</string>
          </attribute>
-         <widget class="QCheckBox" name="isECar">
+         <widget class="QCheckBox" name="parkingEnableBox">
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>10</y>
+            <y>30</y>
+            <width>92</width>
+            <height>23</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Parking</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="freeParkingBox">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>60</y>
             <width>121</width>
-            <height>20</height>
+            <height>23</height>
            </rect>
           </property>
           <property name="text">
-           <string>Route für E-Car</string>
+           <string>Free Parking</string>
           </property>
          </widget>
-         <widget class="QLineEdit" name="ecarReach">
+         <widget class="QComboBox" name="parkingAllowanceComboBox">
           <property name="geometry">
            <rect>
-            <x>100</x>
-            <y>50</y>
-            <width>251</width>
-            <height>22</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QLabel" name="ecarReachLabel">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>50</y>
-            <width>81</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Reichweite</string>
-          </property>
-         </widget>
-         <widget class="QComboBox" name="reachUnit">
-          <property name="geometry">
-           <rect>
-            <x>360</x>
-            <y>50</y>
-            <width>72</width>
-            <height>22</height>
+            <x>160</x>
+            <y>90</y>
+            <width>86</width>
+            <height>25</height>
            </rect>
           </property>
           <item>
            <property name="text">
-            <string>Km</string>
+            <string>Public</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Time-Constraint</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Private</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Customer</string>
            </property>
           </item>
          </widget>
-         <widget class="QProgressBar" name="prepareProgressBar">
+         <widget class="QLabel" name="parkingTypeLabel">
           <property name="geometry">
            <rect>
-            <x>310</x>
-            <y>110</y>
-            <width>118</width>
-            <height>23</height>
-           </rect>
-          </property>
-          <property name="value">
-           <number>24</number>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label">
-          <property name="geometry">
-           <rect>
-            <x>206</x>
-            <y>110</y>
-            <width>101</width>
-            <height>20</height>
+            <x>50</x>
+            <y>90</y>
+            <width>81</width>
+            <height>17</height>
            </rect>
           </property>
           <property name="text">
-           <string>Preparations</string>
+           <string>Allowance</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::AutoText</enum>
+          </property>
+         </widget>
+         <widget class="QLabel" name="parkingResultLabel">
+          <property name="geometry">
+           <rect>
+            <x>260</x>
+            <y>10</y>
+            <width>191</width>
+            <height>111</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </widget>

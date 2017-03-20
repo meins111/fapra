@@ -24,11 +24,13 @@ Widget::Widget(QWidget *parent) :
     ui->progressBar->setValue(0);
     ui->routingProgressBar->setMinimum(0);
     ui->routingProgressBar->setMaximum(100);
-    ui->prepareProgressBar->setMinimum(0);
-    ui->prepareProgressBar->setMaximum(100);
-    ui->prepareProgressBar->setValue(0);
     ui->sucessFailureLabel->setText("");
     ui->messageLabel->setText("");
+    //Parking tab setup
+    ui->parkingAllowanceComboBox->hide();
+    ui->parkingResultLabel->hide();
+    ui->parkingTypeLabel->hide();
+    ui->freeParkingBox->hide();
     graphToggle=false;
 
 	 mapWidget = new MapWidget(this);
@@ -42,12 +44,11 @@ Widget::Widget(QWidget *parent) :
 			 this, &Widget::mouseClickGeoPosition );
      QObject::connect( ui->calculateButton, &::QPushButton::clicked, this, &Widget::startRouting );
      QObject::connect(ui->loadFile, &::QPushButton::clicked, this, &Widget::loadPushed);
+     QObject::connect(ui->parkingEnableBox, &::QCheckBox::stateChanged, this, &Widget::parkingToggle);
      QObject::connect(&slave, SIGNAL (parseProgress(int)), this, SLOT(parseProgress(int)));
      QObject::connect(&slave, SIGNAL(parsingDone(int)), this, SLOT(parsingDone(int)));
      QObject::connect(&slave, SIGNAL(pathfindingProgress(int)), this, SLOT(pathfindingProgress(int)));
      QObject::connect(&slave, SIGNAL(pathfindingDone(int)), this, SLOT(pathfindingDone(int)));
-     QObject::connect(&slave, SIGNAL(metaGraphDone(int)), this, SLOT(metaGraphDone(int)));
-     QObject::connect(&slave, SIGNAL(metaGraphProgress(int)), this, SLOT(metaGraphProgress(int)));
      QVBoxLayout *layout = dynamic_cast<QVBoxLayout *> (this->layout());
 	 layout->QLayout::addWidget(mapWidget);
 
@@ -122,19 +123,6 @@ void Widget::startRouting() {
             navi.setRoutingPriority(false);
 			break;
 	}
-
-	// navigator.setECar ( ui->isECar->isChecked() );
-	unsigned reachInM;
-	unsigned reachInKm = atoi( ui->ecarReach->text().toStdString().c_str() );
-
-	switch( ui->reachUnit->currentIndex() ) {
-		default:
-		case REACH_KM:
-			reachInM = reachInKm * 1000;
-            navi.setMaxRange(reachInKm);
-			break;
-	}
-
     ///Test-Graph
     //mapWidget->getGraphLayer().setGraph(testGraph);
     //mapWidget->update();
@@ -197,28 +185,8 @@ void Widget::parsingDone(int returnCode) {
     //Else set the progress to 100 and set success label message
     ui->progressBar->setValue(100);
     ui->messageLabel->setText("Done!");
-    //Start off meta graph building after the initial parsing is done
-    ui->label->setText("Preparing...");
-    ui->prepareProgressBar->setValue(0);
-    //slave.startMetaGraphBuilder();
 
     return;
-}
-
-void Widget::metaGraphDone(int returnValue) {
-    //Check for errors
-    if(returnValue!=100) {
-        std::string text = "Error Code " + returnValue;
-        ui->label->setText(QString::fromStdString(text));
-        ui->prepareProgressBar->setValue(0);
-        return;
-    }
-    ui->label->setText("Done.");
-    return;
-}
-
-void Widget::metaGraphProgress(int percentProgress) {
-    ui->prepareProgressBar->setValue(percentProgress);
 }
 
 void Widget::pathfindingProgress(int percentProgress){
@@ -332,3 +300,22 @@ void Widget::on_showGraph_clicked()
         return;
     }
 }
+
+void::Widget::parkingToggle() {
+    //check whether it is checked or not
+    if (ui->parkingEnableBox->isChecked()) {
+        ui->parkingAllowanceComboBox->show();
+        ui->parkingResultLabel->show();
+        ui->parkingResultLabel->setText("");
+        ui->parkingTypeLabel->show();
+        ui->freeParkingBox->show();
+    }
+    else {
+        //Not enabled, hide additionl parking options
+        ui->parkingAllowanceComboBox->hide();
+        ui->parkingResultLabel->hide();
+        ui->parkingTypeLabel->hide();
+        ui->freeParkingBox->hide();
+    }
+}
+
