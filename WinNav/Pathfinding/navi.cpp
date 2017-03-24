@@ -132,9 +132,16 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         //Bike access is NOT forbidden, so set the bike allowance mask
                         info.allowance |= ALLOW_BIKE;
                     }
-                    if(!(routingFilter.carDenied.matches(ways))) {
+                    if(!(routingFilter.carDenied.matches(ways)) || routingFilter.carExceptions.matches(ways)) {
                         //Car access is NOT forbidden, so set the car allowance mask
                         info.allowance |= ALLOW_CAR;
+                    }
+                    //If an edge has an allowance of zero, we can easily ignore it, for no one we're interested in can access it!
+                    if(info.allowance == 0) {
+                        //Remove the last!
+                        fullGraph.edgeInfo.pop_back();
+                        ways.next();
+                        continue;
                     }
                     if (routingFilter.speedFilter.matches(ways)) {
                         //A explicit way speed limit is stated: parse it
@@ -408,7 +415,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         }
         //At the end, insert the end of the last nodes' edges
         ///TODO: Letzter 'Last' Eintrag nochmal durchdenken ob dies nicht .size() sein müsste, da one-past-the-end!
-        nodeIt->lastEdge = fullGraph.connectGraph.edges.size()-1;
+        nodeIt->lastEdge = fullGraph.connectGraph.edges.size();
         //Calculate the partial distances of each edge
         fullGraph.calculateEdgeDistances();
         //Update progress if a updateStruct is provided
@@ -485,7 +492,7 @@ bool Navi::selfCheck() {
         }
         //Check if inserted Edge offsets are out-of-bounds or invalid
         if (curNode.firstEdge >= edgeCount ||
-                curNode.lastEdge >= edgeCount ||
+                curNode.lastEdge > edgeCount ||
                 curNode.lastEdge < curNode.firstEdge) {
             logger->error("Node[%v]: Edge Offset Informations BROKEN. FirstEdge=%v, LastEdge=%v",
                           i, curNode.firstEdge, curNode.lastEdge);
@@ -533,15 +540,100 @@ bool Navi::selfCheck() {
 
 
 void Navi::shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct) {
-    //Find the closest nav node for start and target nodes
+    //Create us a logger instance
+    el::Logger* logger = el::Loggers::getLogger("default");
+    //Reset previously stored route
+    composedRouteIsReady=false;
+    composedRoute.reset();
+    //Find the closest nav node for start and target nodes and also
     NodeInfo startNode = fullGraph.getClosestNode(start.getLongitude(), start.getLatitude());
     NodeInfo targetNode = fullGraph.getClosestNode(target.getLongitude(), target.getLatitude());
-    ///NOTE: This is only the most simplest case
-    /// TODO: Rethink strategy for E-Routing case
-    //Redirect call to AStar
-    ///DEBUG:
-    pathfinder.setNavNodeKeepFlag(true);
-    pathfinder.findRoute(startNode.localID, targetNode.localID, updateStruct);
+    //If we perform simple search without looking for parking spots, just call a* start-target method and return
+    if (!parkingSearch || (medium != CAR)) {
+        logger->info("Starting simple pathfinding - not searching for parking spots.");
+        pathfinder.findRoute(startNode.localID, targetNode.localID, updateStruct, true);
+        return;
+    }
+    //So... we are to perform parking search: first want to get the closest parking spot for the target
+    logger->info("Parking Search Step 1: Searching the parking spot closest to the taarget fulfilling the set parameters...");
+    size_t parkingID=0xFFFFFFFF;
+    int ret = fetchClosestParkingSolution(parkingID, targetNode);
+    if (ret != 0) {
+        //Some Error occured! Signal an error
+        if (updateStruct)
+            updateStruct->updateProgress(ret);
+        return;
+    }
+    //The matching spot we just found
+    NodeInfo parkSpot = parkingGraph.nodeInfo.nodeData[parkingID];
+    //So we have found a matching parking spot! Now calculate the best path from start to the parking node
+    logger->info("Parking Search Step 2: Found Parking spot. Now calculate the path from start to the parking spot...");
+    //We need to get the closest NavNode for the parking node
+    NodeInfo closeByNavNode = fullGraph.getClosestNode(parkSpot);
+    //Search the car-part of the route from start to parking position (NOTE: false parameter ensures that no 'finish' signal will be emitted
+    pathfinder.findRoute(startNode.localID, closeByNavNode.localID, updateStruct, false);
+    if (pathfinder.getErrorCode() < 0) {
+        //Some error occurred during operation ... propagate and exit
+        if (updateStruct)
+            updateStruct->updateProgress(pathfinder.getErrorCode());
+        return;
+    }
+    //Successful! Now fetch the route and store it, also store the edge cost, so we can calculate the total time
+    pathfinder.getRoute(composedRoute);
+    composedRoute.setEdgeType(CARDRIVE);
+    composedTravelTime=pathfinder.getRouteTravelTime();
+    composedTravelDistance=pathfinder.getRouteDistance();
+    //Now all that is left is to calculate the foot-walk from the parking spot to the target
+    logger->info("Parking Search Step 3: Car-Route-to-Parking-Spot calculated. Now get the Footwalk-to-Target...");
+    pathfinder.setMedium(FOOT);
+    //We want to walk as less as possible!
+    bool oldPrio=timeIsPrio;
+    pathfinder.setRoutingPrio(false);
+    //Search the path!
+    pathfinder.findRoute(closeByNavNode.localID, targetNode.localID, NULL, false);
+    //Restore setting
+    pathfinder.setMedium(CAR);
+    pathfinder.setRoutingPrio(oldPrio);
+    if (pathfinder.getErrorCode() != 0) {
+        //Some error occured on that last step! NOOO! Propagate error code and return
+        if (updateStruct)
+            updateStruct->updateProgress(pathfinder.getErrorCode());
+        composedRoute.reset();
+        return;
+    }
+    //This route as well was found, so we can now merge the two graphs and are done!
+    LinearGraph footWalk;
+    pathfinder.getRoute(footWalk);
+    footWalk.setEdgeType(FOOTWALK);
+    //Fetch and add the footwalk path as well
+    composedTravelTime += pathfinder.getRouteTravelTime();
+    composedTravelDistance += pathfinder.getRouteDistance();
+    //Now we got two routes: Start-->ParkingSpot, ParkingSpot-->Target
+    logger->info("Parking Search Step 4: Footwalk calculated as well. Now merge the graphs and return.");
+    composedRoute.merge(footWalk);
+    composedRouteIsReady=true;
+    //Signal that the routing is done!
+    if (updateStruct)
+        updateStruct->updateProgress(100);
+    return;
+}
+
+double Navi::getShortestRouteDistance () {
+    //Simply forward the call, if it was a simple pathfinding operation
+    if (medium != CAR || !parkingSearch) {
+        return pathfinder.getRouteDistance();
+    }
+    //Otherwise return the composed cost
+    return composedTravelDistance;
+}
+
+double Navi::getShortestRouteTime () {
+    //Simply forward the call, if it was a simple pathfinding operation
+    if (medium != CAR || !parkingSearch) {
+        return pathfinder.getRouteTravelTime();
+    }
+    //Otherwise return the composed cost
+    return composedTravelTime;
 }
 
 
@@ -623,7 +715,19 @@ void Navi::getFullGraph (LinearGraph &graph) {
 
 void Navi::getShortestRouteGraph(LinearGraph &graph) {
     graph.reset();
+    //If we did a parking spot search, we want to return the stored composed graph, otherwise we can just propagate the pathfinder graph
+    if (parkingSearch && composedRouteIsReady) {
+        graph = composedRoute;
+        return;
+    }
+    else if (parkingSearch && !composedRouteIsReady) {
+        //Route is not ready yet!
+        throw (std::logic_error("getShortestRouteGraph() :: Parking Search done but composed route not ready!"));
+        return;
+    }
+    //Otherwise this was a normal operation, so we can simply forward the graph computed in the aStar object
     pathfinder.getRoute(graph);
+    return;
 }
 
 void Navi::reset() {
@@ -635,4 +739,78 @@ void Navi::reset() {
     parkingGraph.connectGraph.nodes.clear();
     parkingGraph.edgeInfo.clear();
     parkingGraph.nodeInfo.nodeData.clear();
+}
+
+void Navi::setParkingParameters (bool publicParking, bool privateParking, bool customerParking,
+                                    bool freeParking, bool constraintTime) {
+    parkingSearchParams.publicParking=publicParking;
+    parkingSearchParams.privateParking=privateParking;
+    parkingSearchParams.customerParking=customerParking;
+    parkingSearchParams.freeParking=freeParking;
+    parkingSearchParams.constraintTime=constraintTime;
+}
+
+int Navi::fetchClosestParkingSolution (size_t& closestParkingSpotID, const NodeInfo& pos) {
+    //Result vector
+    std::vector<size_t> spotIDs;
+    //Reserve some space to speed up the search
+    spotIDs.reserve(50);
+    el::Logger* logger = el::Loggers::getLogger("default");
+    logger->info("Start searching parking spots within 500m of (%v | %v)...", pos.latitude, pos.longitude);
+    //First radius check: search for all parking spots with a direct distance of no more than 500m
+    long spotCnt = parkingGraph.getNodesWithinRadius(pos, 500.0, spotIDs);
+    //NOTE: the method will return the ids of the found nodes in an sorted order, such that the closest match is returned first
+    if (spotCnt<1) {
+        logger->info("... no parking spots within 500m distance from the target.");
+        spotCnt=1;
+    }
+    else {
+        logger->info("... found %v possible parking spots. Checking for matches with search params now...", spotCnt);
+        for (size_t i=0; i<spotCnt; i++) {
+            NodeInfo &curSpot = parkingGraph.nodeInfo.nodeData[spotIDs[i]];
+            assert ((curSpot.allowsParking == true) && (curSpot.parkingPropertyID < parkingNodeInfo.size()));
+            ParkingSolution &spotInfo = parkingNodeInfo[curSpot.parkingPropertyID];
+            //Now check for a possible match
+            if (parkingSearchParams==spotInfo) {
+                //positive match, and the closest as well (otherwise we either would have ended already)
+                closestParkingSpotID = spotIDs[i];
+                //So: return the node id of this spot!
+                logger->info("... found a positive match with the parking node ID %v.", closestParkingSpotID);
+                //Exit with success code
+                return 0;
+            }
+        }
+        logger->info("... no matching parking spots found within 500m of the target.");
+    }
+    //Increase the search radius to 1km - but not further ...
+    //most people will not want to walk more than 1km from parking to their target anyway ...
+    spotIDs.clear();
+    logger->info("Increasing search radius to 1km...");
+    long incrSpotCount = parkingGraph.getNodesWithinRadius(pos, 1000.0, spotIDs);
+    if (incrSpotCount<1 || (incrSpotCount-spotCnt < 1)) {
+        logger->info("... no or no additional parking spots within 1km distance from the target. Aborting.");
+        closestParkingSpotID=0xFFFFFFFF;
+        return NO_MATCHING_PARKING_SPOT_FOUND;
+    }
+    else {
+        logger->info("... found %v possible parking spots. Checking for matches with search params now...", incrSpotCount-spotCnt);
+        //nodes [0..spotCnt-1] have been checked in the previous spot already!
+        for (size_t i=spotCnt-1; i<incrSpotCount; i++) {
+            NodeInfo &curSpot = parkingGraph.nodeInfo.nodeData[spotIDs[i]];
+            assert ((curSpot.allowsParking == true) && (curSpot.parkingPropertyID < parkingNodeInfo.size()));
+            ParkingSolution &spotInfo = parkingNodeInfo[curSpot.parkingPropertyID];
+            //Now check for a possible match
+            if (parkingSearchParams==spotInfo) {
+                //positive match, and the closest as well (otherwise we either would have ended already)
+                //So: return the node id of this spot!
+                logger->info("... found a positive match with the parking node ID %v.", spotIDs[i]);
+                closestParkingSpotID=spotIDs[i];
+                //Exit with success code
+                return 0;
+            }
+        }
+    }
+    logger->info("... no matching parking spots found within 1km of the target. Aborting.");
+    closestParkingSpotID=0xFFFFFFFF;
+    return NO_MATCHING_PARKING_SPOT_FOUND;
 }

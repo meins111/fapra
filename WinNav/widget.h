@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <marble/GeoDataCoordinates.h>
 #include "MapWidget/MapWidget.h"
-#include "TestGraph/TestGraph.h"
 #include "Pathfinding/navi.h"
 #include "Pathfinding/nodeinfo.h"
 #include "Pathfinding/basicedge.h"
@@ -34,6 +33,8 @@ class Widget : public QWidget
 
 	 // Anpassen nach den Ids in der qt-generator `reachUnit` combobox
 	 enum REACH_UNIT { REACH_KM = 0 };
+
+     enum PARK_ALLOWANCE { PUBLIC=0, CUSTOMER=1, PRIVATE=2 };
 
 
 public:

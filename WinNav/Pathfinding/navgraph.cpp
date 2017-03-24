@@ -180,12 +180,13 @@ nanoflann::SearchParams params;
 const size_t nMatches = index.radiusSearch(&query_pt[0],search_radius, ret_matches, params);
 */
 
-long int NavGraph::getNodesWithinRadius (const NodeInfo &curPos, double radius, std::vector<size_t> &closeNodeIds){
+long int NavGraph::getNodesWithinRadius (const NodeInfo &curPos, double radius, std::vector<size_t> &closeNodeIds) const{
     std::vector< std::pair<size_t, double> > matches;
     //We want to get the nodes sorted by their distance to the target, starting with the closest one
     nanoflann::SearchParams params;
+    double origin[2] = {curPos.longitude, curPos.latitude};
     params.sorted=true;
-    size_t matchCnt = closenessTree.radiusSearch(curPos, radius, matches, params);
+    size_t matchCnt = closenessTree.radiusSearch(origin, radius, matches, params);
     if (matchCnt>0) {
         closeNodeIds.clear();
         auto it=matches.begin();

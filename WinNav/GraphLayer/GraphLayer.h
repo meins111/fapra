@@ -22,12 +22,14 @@ class GraphLayer : public Marble::LayerInterface {
 	Notification start, end;
 protected:
 	void paintGraph(Marble::GeoPainter *painter);
+    /*
     void paintCarDriveGraph(Marble::GeoPainter *painter, bool parkingAtTarget);
     void paintFootwalk(Marble::GeoPainter *painter);
+    */
 	void paintNotification(Marble::GeoPainter *painter, Notification &note);
 	void paintNode(Marble::GeoPainter *painter, Node &node);
     void paintParkingSpot(Marble::GeoPainter *painter, Node &node);
-	void paintEdge(Marble::GeoPainter *painter, Node &start, Node &end);
+    void paintEdge(Marble::GeoPainter *painter, Node &start, Node &end, edgeType_t type);
     void paintWalkingNode(Marble::GeoPainter *painter, Node &node);
 public:
 	GraphLayer();

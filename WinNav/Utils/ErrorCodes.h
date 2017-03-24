@@ -16,6 +16,8 @@
 #define PREDECESSOR_MAP_EMPTY           -19
 #define PREDECESSOR_MAP_BROKEN          -20
 
+#define NO_MATCHING_PARKING_SPOT_FOUND  -40
+
 #define COMPUTATION_ABORTED             -100
 #endif // ERRORCODES
 

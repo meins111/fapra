@@ -16,16 +16,28 @@ typedef struct osmRoutingFilter{
         onewayFilter ({ new osmpbf::KeyValueTagFilter("oneway", "yes"),
                         new osmpbf::KeyMultiValueTagFilter("highway",{ "motorway", "motorway_link", "invalid" }),
                         new osmpbf::KeyValueTagFilter("junction", "roundabout")}),
-        footDenied ({   new osmpbf::KeyValueTagFilter("foot", "no"),
-                        new osmpbf::KeyMultiValueTagFilter("access", {"no", "private"}),
-                        new osmpbf::KeyMultiValueTagFilter("highway", {"motorroad", "trunk", "primary", "motorroad_link", "trunk_link", "primary_link", "invalid"})}),
-        bikeDenied ({   new osmpbf::KeyValueTagFilter("bicycle", "no"),
-                        new osmpbf::KeyMultiValueTagFilter("access", {"no", "private"}),
-                        new osmpbf::KeyMultiValueTagFilter("highway", {"motorroad", "trunk", "primary", "motorroad_link", "trunk_link", "primary_link", "invalid"})}),
-        carDenied ({    new osmpbf::KeyMultiValueTagFilter ("motorcar", {"no", "private", "agricultural", "forestry", "delivery"}),
-                        new osmpbf::KeyMultiValueTagFilter("access", {"no", "private", "agricultural", "forestry", "delivery"}),
-                        new osmpbf::KeyMultiValueTagFilter("highway", {"footway", "steps", "path", "cycleway", "platform", "track", "bridleway", "pedestrian", "invalid"})})
 
+        footDenied ({   new osmpbf::KeyMultiValueTagFilter("foot", {"no", "private"}),
+                        new osmpbf::KeyMultiValueTagFilter("access", {"no", "private"}),
+                        new osmpbf::KeyMultiValueTagFilter("highway", {"motorroad", "trunk", "primary", "motorroad_link", "trunk_link", "primary_link", "invalid"})}),
+
+        bikeDenied ({   new osmpbf::KeyMultiValueTagFilter("bicycle", {"no", "private"}),
+                        new osmpbf::KeyMultiValueTagFilter ("vehicle", {"no", "private", "agricultural", "forestry", "delivery"}),
+                        new osmpbf::KeyMultiValueTagFilter("access", {"no", "private"}),
+                        new osmpbf::KeyMultiValueTagFilter("highway", {"motorroad", "trunk", "primary", "motorroad_link", "trunk_link", "primary_link", "invalid"})}),
+
+        carDenied ({    new osmpbf::KeyMultiValueTagFilter ("motorcar", {"no", "private", "agricultural", "forestry", "delivery"}),
+                        new osmpbf::KeyMultiValueTagFilter ("vehicle", {"no", "private", "agricultural", "forestry", "delivery"}),
+                        new osmpbf::KeyMultiValueTagFilter ("motor_vehicle", {"no", "private", "agricultural", "forestry", "delivery"}),
+                        new osmpbf::KeyMultiValueTagFilter("access", {"no", "private", "agricultural", "forestry", "delivery"}),
+                        new osmpbf::KeyMultiValueTagFilter("highway", {"footwalk", "steps", "path", "cycleway", "platform", "track", "bridleway", "pedestrian", "invalid"})}),
+
+        carExceptions({     new osmpbf::KeyValueTagFilter("footwalk", "crossing"),
+                            new osmpbf::KeyValueTagFilter("highway", "crossing)"),
+                            new osmpbf::KeyMultiValueTagFilter("motorcar", {"yes", "permissive"}),
+                            new osmpbf::KeyMultiValueTagFilter("vehicle", {"yes", "permissive"}),
+                            new osmpbf::KeyMultiValueTagFilter("motor_vehicle",{"yes", "permissive"}),
+                            new osmpbf::KeyMultiValueTagFilter("access", {"yes", "permissive", "destination"})})
         {}
     //Assign the given primitive input block adapter to all mmanaged filters
     void assignInputAdapter (const osmpbf::PrimitiveBlockInputAdaptor *pbi) {
@@ -35,6 +47,7 @@ typedef struct osmRoutingFilter{
         footDenied.assignInputAdaptor(pbi);
         bikeDenied.assignInputAdaptor(pbi);
         carDenied.assignInputAdaptor(pbi);
+        carExceptions.assignInputAdaptor(pbi);
     }
     //Refreshes all filters - Make sure to call this method after the pbi changed (e.g. after a pbi.next() call)
     void refreshAllFilter() {
@@ -44,6 +57,7 @@ typedef struct osmRoutingFilter{
         footDenied.rebuildCache();
         bikeDenied.rebuildCache();
         carDenied.rebuildCache();
+        carExceptions.rebuildCache();
     }
 
     //Key Only Tag filter are able to dismiss any entry that does not match the given Tag, e.g. "highway" for streets
@@ -58,6 +72,9 @@ typedef struct osmRoutingFilter{
     osmpbf::OrTagFilter bikeDenied;
     //Check if car-access is forbidden or it's type implicitly denies car access such as footways
     osmpbf::OrTagFilter carDenied;
+    //Check for Car-access exceptions on typically restricted way-types: e.g. footwalk-crossings, ...
+    //Make sure to apply this filter after the car denied filter, to check for false-negatives!
+    osmpbf::OrTagFilter carExceptions;
 
 } osmRoutingFilter_t;
 

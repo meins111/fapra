@@ -20,9 +20,12 @@ public:
     size_t numEdges() { return edges.size(); }
     size_t numNodes()  { return nodes.size(); }
     void insertNode(const PODNode &node);
+    void insertNodes(const std::vector<PODNode> &nodeVect);
     void insertEdge(const PODEdge &edge);
+    void insertEdges(const std::vector<PODEdge> &edgeVect);
     void reset();
-
+    void merge (LinearGraph &brother);
+    void setEdgeType(edgeType_t type);
 protected:
     std::vector<PODNode> nodes;
     std::vector<PODEdge> edges;

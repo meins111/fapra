@@ -22,5 +22,6 @@ void PODEdge::setEnd(std::size_t end) {
 PODEdge & PODEdge::operator= (const PODEdge &copy) {
     start=copy.start;
     end=copy.end;
+    type=copy.type;
     return *this;
 }

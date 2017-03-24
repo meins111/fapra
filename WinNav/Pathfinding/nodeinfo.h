@@ -4,6 +4,7 @@
 #define PI 3.14159265358979323846	//Some Pi numbers
 #define degreeToRadian  PI/180      //Used to convert from degree to radian
 #define EARTH_RADIUS 6371.0         //recommended radius by the International Union of Geodesy and Geophysics
+#define LATITUDE_KM 110.574         //One Latitude is defined to be 110,574 km in length
 
 #include <math.h>
 #include <stdint.h>
@@ -43,6 +44,9 @@ public:
 
     //Calculate the haversine distance from this node to another node
     double getHaversineDistanceTo (const NodeInfo &targetNode);
+
+    //Utility method to forge a point with a set of coordinates that are about dist-meters from this point
+    NodeInfo forgePointWithDistance (double dist) const;
 
 };
 

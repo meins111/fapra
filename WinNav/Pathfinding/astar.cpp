@@ -178,7 +178,7 @@ void AStar::getRoute(LinearGraph &retRoute) {
 }
 
 
-void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *condStruct) {
+void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *condStruct, bool emitDoneSignal) {
     //Check the provided graph
     if (!checkGraph()) {
         errorCode=EMPTY_GRAPH_ERROR;
@@ -201,6 +201,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
     if (maxRange < 0.5) {
         isMaxRangeSet=false;
     }
+    el::Logger* logger = el::Loggers::getLogger("default");
     //Initialize sets to empty
     closedSet.clear();
     prioQueue.clear();
@@ -212,6 +213,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
     Handle_Type_t startHandle=prioQueue.emplace(start, h(start, target), 0);
     //Add the start ID and its handle to the open list
     openSet.emplace(start, startHandle);
+    expandedNodes.emplace_back(graph.nodeInfo.nodeData[start]);
     //Progress counters we'll use to time update notifications
     double counterSteps=h(start, target)/100;
     double counterNext=h(start,target)-counterSteps;
@@ -236,8 +238,8 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             constructPath(start, target, NULL);
             //Store the total cost of the calculated path
             totalCost = current.gScore;
-            if (condStruct) {
-                //Make sure to emit 'Parse Done' Signal
+            if (condStruct && emitDoneSignal) {
+                //Make sure to emit 'Parse Done' Signal, but only if we are allowed to do so
                 condStruct->updateProgress(100);
             }
             return;
@@ -246,6 +248,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
         if (condStruct && (h(current.id,target) < counterNext)) {
             counterNext -= counterSteps;
             ++progress;
+            logger->info("Routing :: Update Progress :: %v", progress);
             condStruct->updateProgress(progress);
         }
         //Number of adjacent edges of the current node
@@ -262,7 +265,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
             BasicEdge &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
             EdgeInfo &adjacentEdgeInfo = graph.edgeInfo[adjacentEdge.edgeInfoId];
             //Check if the current travel medium is allowed to travel on this edge at all
-            if (adjacentEdgeInfo.allowance & curMedium == 0x00) {
+            if ((adjacentEdgeInfo.allowance & curMedium) == 0) {
                 //Medium not allowed on this edge -> skip
                 continue;
             }
@@ -282,6 +285,8 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                                                           h(adjacentNode.localID, target)+curCost,
                                                             curCost);
                 openSet.emplace(adjacentNode.localID, handle);
+                ///DEBUG!!!
+                expandedNodes.emplace_back(graph.nodeInfo.nodeData[adjacentNode.localID]);
                 continue;
             }
             //Node was visited before ...
@@ -343,4 +348,12 @@ double AStar::h(const size_t &n1, const size_t &n2) {
         cost /= curMaxSpeed;
     }
     return cost;
+}
+
+
+void AStar::getVisitedNodes (std::vector<PODNode> &visited) {
+    for (size_t i=0; i<expandedNodes.size(); i++) {
+        visited.emplace_back(expandedNodes.back().longitude, expandedNodes.back().latitude);
+        expandedNodes.pop_back();
+    }
 }

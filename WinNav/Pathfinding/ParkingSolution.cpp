@@ -5,6 +5,28 @@ ParkingSolution::ParkingSolution()
 
 }
 
+bool ParkingSolution::operator ==(const ParkingSolution &request) const {
+    if (request.publicParking && !publicParking)
+        return false;
+    if (request.privateParking && !privateParking)
+        return false;
+    if (request.customerParking && !customerParking)
+        return false;
+    if (request.freeParking && !freeParking)
+        return false;
+    if (request.constraintTime && !constraintTime)
+        return false;
+    //Positive equalitiy match -> return true
+    return true;
+}
+
+bool ParkingSolution::operator !=(const ParkingSolution &request) const {
+    //Inverse positive match
+    return !(*this==request);
+}
+
+
+
 void ParkingSolution::buildFromDedicatedParkingFilter(osmDedicatedParkingFilter_t &filter, osmpbf::INodeStream &nodes) {
     if (filter.publicParkingDeniedFilter.matches(nodes)) {
         publicParking=false;

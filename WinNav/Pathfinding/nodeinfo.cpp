@@ -27,3 +27,15 @@ NodeInfo & NodeInfo::operator= ( const NodeInfo & copy) {
    parkingPropertyID=copy.parkingPropertyID;
    return *this;
 }
+
+NodeInfo NodeInfo::forgePointWithDistance (double dist) const {
+    //Calculate the coordinates of the forged point, given the distance and the coordinatees of this node
+    //To reduce the number of unknown to one, we can state that one of the two terms results to zero
+    //by setting lonB/latB to the same value as the respective value of this node - we'll take longitude
+    NodeInfo forged;
+    //Simply use the longitude of the start node
+    forged.longitude=this->longitude;
+    //And add the distance on top of its latitude value, using the defined latitude length in km to compute directly on latitude-degree's
+    forged.latitude =this->latitude + (dist/1000)/LATITUDE_KM;
+    return forged;
+}

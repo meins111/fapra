@@ -170,7 +170,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		GraphLayer/GraphLayer.h \
 		TestGraph/PODEdge.h \
 		TestGraph/PODNode.h \
-		TestGraph/TestGraph.h \
 		MapWidget/MapWidget.h \
 		backup/ui_widget.h \
 		GraphInterface/Edge.h \
@@ -403,7 +402,7 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents widget.h GraphLayer/GraphLayer.h TestGraph/PODEdge.h TestGraph/PODNode.h TestGraph/TestGraph.h MapWidget/MapWidget.h backup/ui_widget.h GraphInterface/Edge.h GraphInterface/Graph.h GraphInterface/Node.h ui_widget.h Pathfinding/basicgraph.h Pathfinding/basicnode.h Pathfinding/basicedge.h Pathfinding/nodeinfo.h Pathfinding/edgeinfo.h Pathfinding/allowancemasks.h Pathfinding/roadtypes.h Pathfinding/closenesstree.h Pathfinding/navgraph.h Pathfinding/navi.h Pathfinding/pathfinder.h Utils/inplacevectorreorder.h TestGraph/lineargraph.h Utils/slaver.h Utils/condwait_t.h Utils/easylogging++.h GraphInterface/pointofinterest.h stopworkingexception.h Pathfinding/astar.h Utils/ErrorCodes.h Pathfinding/ParkingSolution.h Utils/OsmFilterContainer.h $(DISTDIR)/
+	$(COPY_FILE) --parents widget.h GraphLayer/GraphLayer.h TestGraph/PODEdge.h TestGraph/PODNode.h MapWidget/MapWidget.h backup/ui_widget.h GraphInterface/Edge.h GraphInterface/Graph.h GraphInterface/Node.h ui_widget.h Pathfinding/basicgraph.h Pathfinding/basicnode.h Pathfinding/basicedge.h Pathfinding/nodeinfo.h Pathfinding/edgeinfo.h Pathfinding/allowancemasks.h Pathfinding/roadtypes.h Pathfinding/closenesstree.h Pathfinding/navgraph.h Pathfinding/navi.h Pathfinding/pathfinder.h Utils/inplacevectorreorder.h TestGraph/lineargraph.h Utils/slaver.h Utils/condwait_t.h Utils/easylogging++.h GraphInterface/pointofinterest.h stopworkingexception.h Pathfinding/astar.h Utils/ErrorCodes.h Pathfinding/ParkingSolution.h Utils/OsmFilterContainer.h $(DISTDIR)/
 	$(COPY_FILE) --parents main.cpp widget.cpp GraphInterface/Node.cpp GraphInterface/Edge.cpp GraphInterface/Graph.cpp GraphLayer/GraphLayer.cpp TestGraph/PODEdge.cpp TestGraph/PODNode.cpp TestGraph/TestGraph.cpp MapWidget/MapWidget.cpp Pathfinding/basicgraph.cpp Pathfinding/basicnode.cpp Pathfinding/basicedge.cpp Pathfinding/nodeinfo.cpp Pathfinding/edgeinfo.cpp Pathfinding/navgraph.cpp Pathfinding/navi.cpp Pathfinding/pathfinder.cpp Utils/inplacevectorreorder.cpp TestGraph/lineargraph.cpp Utils/slaver.cpp Utils/easylogging++.cc GraphInterface/pointofinterest.cpp stopworkingexception.cpp Pathfinding/astar.cpp Pathfinding/ParkingSolution.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents widget.ui $(DISTDIR)/
 
@@ -436,9 +435,6 @@ moc_widget.cpp: MapWidget/MapWidget.h \
 		GraphInterface/Graph.h \
 		GraphInterface/Node.h \
 		GraphInterface/Edge.h \
-		TestGraph/TestGraph.h \
-		TestGraph/PODNode.h \
-		TestGraph/PODEdge.h \
 		Pathfinding/navi.h \
 		Pathfinding/basicedge.h \
 		Pathfinding/basicnode.h \
@@ -478,6 +474,8 @@ moc_widget.cpp: MapWidget/MapWidget.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
 		TestGraph/lineargraph.h \
+		TestGraph/PODEdge.h \
+		TestGraph/PODNode.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
 		Utils/slaver.h \
@@ -559,9 +557,6 @@ main.o: main.cpp widget.h \
 		GraphInterface/Graph.h \
 		GraphInterface/Node.h \
 		GraphInterface/Edge.h \
-		TestGraph/TestGraph.h \
-		TestGraph/PODNode.h \
-		TestGraph/PODEdge.h \
 		Pathfinding/navi.h \
 		Pathfinding/basicedge.h \
 		Pathfinding/basicnode.h \
@@ -601,6 +596,8 @@ main.o: main.cpp widget.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
 		TestGraph/lineargraph.h \
+		TestGraph/PODEdge.h \
+		TestGraph/PODNode.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
 		Utils/slaver.h \
@@ -613,9 +610,6 @@ widget.o: widget.cpp widget.h \
 		GraphInterface/Graph.h \
 		GraphInterface/Node.h \
 		GraphInterface/Edge.h \
-		TestGraph/TestGraph.h \
-		TestGraph/PODNode.h \
-		TestGraph/PODEdge.h \
 		Pathfinding/navi.h \
 		Pathfinding/basicedge.h \
 		Pathfinding/basicnode.h \
@@ -655,6 +649,8 @@ widget.o: widget.cpp widget.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
 		TestGraph/lineargraph.h \
+		TestGraph/PODEdge.h \
+		TestGraph/PODNode.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
 		Utils/slaver.h \
@@ -687,12 +683,7 @@ PODNode.o: TestGraph/PODNode.cpp TestGraph/PODNode.h \
 		GraphInterface/Node.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o PODNode.o TestGraph/PODNode.cpp
 
-TestGraph.o: TestGraph/TestGraph.cpp TestGraph/TestGraph.h \
-		GraphInterface/Graph.h \
-		GraphInterface/Node.h \
-		GraphInterface/Edge.h \
-		TestGraph/PODNode.h \
-		TestGraph/PODEdge.h
+TestGraph.o: TestGraph/TestGraph.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o TestGraph.o TestGraph/TestGraph.cpp
 
 MapWidget.o: MapWidget/MapWidget.cpp MapWidget/MapWidget.h \

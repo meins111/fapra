@@ -41,8 +41,8 @@
 class Navi
 {
 public:
-    Navi() : pathfinder(fullGraph), fullGraph(), fullGraphParsed(false), parkingGraph(),
-        medium(CAR), timeIsPrio(true), maxRange(0), startRange(0){}
+    Navi() : pathfinder(fullGraph), fullGraph(), fullGraphParsed(false), parkingGraph(), composedRoute(), composedRouteIsReady(false),
+        composedTravelTime(0.0), composedTravelDistance(0.0), medium(CAR), timeIsPrio(true), maxRange(0), startRange(0), parkingSearch(false), parkingSearchParams(){}
 
     //void parsePbfFile(const std::string &path);
     void parsePbfFile(const std::string &path, CondWait_t *updateStruct);
@@ -54,13 +54,23 @@ public:
     void setMaxRange(const size_t range);
     void setStartRange(const uint8_t range);
     void setRoutingPriority(bool travelTimePriority);
+    void setParkingParameters (bool publicParking,
+                               bool privateParking,
+                               bool customerParking,
+                               bool freeParking,
+                               bool constraintTime);
 
     void getFullGraph (LinearGraph &graph);
     void getShortestRouteGraph(LinearGraph &graph);
-    double getShortestRouteDistance () { pathfinder.getRouteDistance(); }
-    double getShortestRouteTime () { pathfinder.getRouteTravelTime(); }
+    double getShortestRouteDistance ();
+    double getShortestRouteTime ();
     bool getRoutingPrio() { return timeIsPrio; }
     bool isNavGraphParsed () { return fullGraphParsed; }
+
+    void enableParkingSearch () {parkingSearch=true;}
+    void disableParkingSearch () {parkingSearch=false;}
+
+    void getVisitedNodes (std::vector<PODNode> &visited) {pathfinder.getVisitedNodes(visited);}
 
     void reset();
 
@@ -74,8 +84,15 @@ protected:
 
     //Uses an extra navgraph to store parking informations
     NavGraph parkingGraph;
-    //Parking area nodes
+    //Parking information array - stores the properties of known parking solutions
     std::vector<ParkingSolution> parkingNodeInfo;
+
+    //Local storage to keep a computed route
+    LinearGraph composedRoute;
+    bool composedRouteIsReady;
+    double composedTravelTime;
+    double composedTravelDistance;
+
 
 
     //Lookup to match the EdgeType and its String representation
@@ -93,11 +110,18 @@ protected:
     //Build the edges of the meta graph: This includes MANY a* runs - depending on the amount of known recharge stations
     void buildMetaEdges();
 
+    //Utility method to fetch the closest parking space to a given location that fulfills the search parameters
+    int fetchClosestParkingSolution (size_t &closestParkingSpotID, const NodeInfo &pos);
+
     //Routing options
     TravelMedium medium;
     bool timeIsPrio;
     size_t maxRange;
     uint8_t startRange;
+    //Parking space setting
+    bool parkingSearch;
+    ParkingSolution parkingSearchParams;
+
 
 };
 

@@ -73,11 +73,25 @@ void GraphLayer::paintWalkingNode(Marble::GeoPainter *painter, Node &node) {
     painter->drawEllipse(coord, 8, 8, false);
 }
 
-void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end) {
+void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end, edgeType_t type) {
 	GeoDataCoordinates startCoord(start.getLongitude(), start.getLatitude(), 0, GeoDataCoordinates::Degree);
 	GeoDataCoordinates endCoord(end.getLongitude(), end.getLatitude(), 0, GeoDataCoordinates::Degree);
 	GeoDataLineString lineString;
 	lineString << startCoord << endCoord;
+    switch (type) {
+    case UNDEFINED:
+        painter->setPen( Qt::black );
+        break;
+    case CARDRIVE:
+        painter->setPen ( Qt::black );
+        break;
+    case FOOTWALK:
+        painter->setPen( Qt::blue );
+        break;
+    case BIKERIDE:
+        painter->setPen( Qt::green );
+        break;
+    }
 	painter->drawPolyline(lineString);
 }
 
@@ -101,19 +115,24 @@ void GraphLayer::paintGraph(Marble::GeoPainter * painter) {
 	if(graph == NULL)
 		return;
 
-	size_t edges = graph->numEdges();
+	size_t edges = graph->numEdges();    
+    size_t nodes = graph->numNodes();
+    for (size_t i=0; i<nodes; i++) {
+        Node &cur = graph->getNode(i);
+        paintNode (painter, cur);
+    }
 	for(size_t i=0 ; i < edges ; ++i) {
 		Edge &edge = graph->getEdge(i);
 		Node &start = graph->getNode( edge.getStart() );
 		Node &end = graph->getNode( edge.getEnd() );
 
-		paintNode( painter, start);
-		paintNode( painter, end);
-		paintEdge( painter, start, end);
+        //paintNode( painter, start);
+        //paintNode( painter, end);
+        paintEdge( painter, start, end, edge.getEdgeType());
 
 	}
 }
-
+/*
 void GraphLayer::paintCarDriveGraph(Marble::GeoPainter *painter, bool parkingAtTarget) {
     paintGraph(painter);
     if (parkingAtTarget) {
@@ -141,7 +160,7 @@ void GraphLayer::paintFootwalk(Marble::GeoPainter *painter) {
 
     }
 }
-
+*/
 void GraphLayer::setGraph(Graph &graph) {
 	this->graph = &graph;
 }

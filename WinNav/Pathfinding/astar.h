@@ -52,7 +52,7 @@ public:
 
     //NOTE: currently emitted progress/errorCodes will directly go to the gui, which may not be wanted if
     //the current routing task has to run multiple a* runs ... will confuse programm & user!
-    void findRoute (const size_t&start, const size_t &target, CondWait_t *condStruct);
+    void findRoute (const size_t&start, const size_t &target, CondWait_t *condStruct, bool emitDoneSignal);
 
     void getRoute(LinearGraph &retRoute);
 
@@ -74,6 +74,8 @@ public:
     double getRouteTravelTime () { return totalTime; }
 
     void getNavNodesOnRoute(std::vector<size_t> &nodes);
+
+    void getVisitedNodes (std::vector<PODNode> &visited);
 
 private:
     //The error code of the last routing run
@@ -101,6 +103,9 @@ private:
     bool keepNavNodes;
     std::vector<size_t> routeNavNodes;
     std::vector<size_t> routeNavEdges;
+
+    //debug array storing all expanded nodes
+    std::vector<NodeInfo> expandedNodes;
 
     //Flag indicates which criteria has to be tracked: travel time (true) or travel distance (false)
     bool timeIsPrio;

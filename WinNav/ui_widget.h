@@ -59,6 +59,7 @@ public:
     QComboBox *parkingAllowanceComboBox;
     QLabel *parkingTypeLabel;
     QLabel *parkingResultLabel;
+    QCheckBox *timeConstraintCheckbox;
     QWidget *Settings;
     QLineEdit *filePath;
     QPushButton *loadFile;
@@ -192,6 +193,9 @@ public:
         parkingResultLabel = new QLabel(parking);
         parkingResultLabel->setObjectName(QStringLiteral("parkingResultLabel"));
         parkingResultLabel->setGeometry(QRect(260, 10, 191, 111));
+        timeConstraintCheckbox = new QCheckBox(parking);
+        timeConstraintCheckbox->setObjectName(QStringLiteral("timeConstraintCheckbox"));
+        timeConstraintCheckbox->setGeometry(QRect(40, 120, 141, 23));
         tabWidget->addTab(parking, QString());
         Settings = new QWidget();
         Settings->setObjectName(QStringLiteral("Settings"));
@@ -225,7 +229,7 @@ public:
 
         retranslateUi(Widget);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(Widget);
@@ -263,12 +267,12 @@ public:
         parkingAllowanceComboBox->clear();
         parkingAllowanceComboBox->insertItems(0, QStringList()
          << QApplication::translate("Widget", "Public", 0)
-         << QApplication::translate("Widget", "Time-Constraint", 0)
-         << QApplication::translate("Widget", "Private", 0)
          << QApplication::translate("Widget", "Customer", 0)
+         << QApplication::translate("Widget", "Private", 0)
         );
         parkingTypeLabel->setText(QApplication::translate("Widget", "Allowance", 0));
         parkingResultLabel->setText(QString());
+        timeConstraintCheckbox->setText(QApplication::translate("Widget", "Time Constraint", 0));
         tabWidget->setTabText(tabWidget->indexOf(parking), QApplication::translate("Widget", "Parking", 0));
         filePath->setText(QApplication::translate("Widget", ".../Path to OSM.pbf File", 0));
         loadFile->setText(QApplication::translate("Widget", "Parse File", 0));

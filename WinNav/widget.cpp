@@ -31,6 +31,7 @@ Widget::Widget(QWidget *parent) :
     ui->parkingResultLabel->hide();
     ui->parkingTypeLabel->hide();
     ui->freeParkingBox->hide();
+    ui->timeConstraintCheckbox->hide();
     graphToggle=false;
 
 	 mapWidget = new MapWidget(this);
@@ -123,6 +124,39 @@ void Widget::startRouting() {
             navi.setRoutingPriority(false);
 			break;
 	}
+    //Fetch parking informations (if any)
+    if (ui->parkingEnableBox->isChecked()) {
+        navi.enableParkingSearch();
+        bool publicParking=false, privateParking=false, customerParking=false;
+        switch (ui->parkingAllowanceComboBox->currentIndex()) {
+        case PUBLIC:
+            publicParking=true;
+            break;
+        case CUSTOMER:
+            customerParking=true;
+            break;
+        case PRIVATE:
+            privateParking=true;
+            break;
+        default:
+            //keep at all at false!
+            break;
+        }
+        bool timeConstraint = false, freeParking = true;
+        if (ui->timeConstraintCheckbox->isChecked()) {
+            timeConstraint=true;
+        }
+        if (ui->freeParkingBox->isChecked()) {
+            freeParking=false;
+        }
+        //Set the parking search parameters
+        navi.setParkingParameters(publicParking, privateParking, customerParking, freeParking, timeConstraint);
+    }
+    else {
+        navi.disableParkingSearch();
+    }
+
+
     ///Test-Graph
     //mapWidget->getGraphLayer().setGraph(testGraph);
     //mapWidget->update();
@@ -207,8 +241,15 @@ void Widget::pathfindingDone(int returnCode) {
     if (returnCode>100 || returnCode<0) {
         ui->routingProgressBar->setValue(0);
         QString errMsg = "FAILED with Error-Code: ";
-        errMsg.append(returnCode);
+        errMsg.append((char)returnCode);
         ui->sucessFailureLabel->setText(errMsg);
+        //Print all expanded nodes for debugging
+        std::vector<PODNode> visited;
+        navi.getVisitedNodes(visited);
+        path.insertNodes(visited);
+        mapWidget->getGraphLayer().setGraph(path);
+        mapWidget->update();
+        return;
     }
     //Else set the progress to 100 and set success label message
     else {
@@ -309,6 +350,7 @@ void::Widget::parkingToggle() {
         ui->parkingResultLabel->setText("");
         ui->parkingTypeLabel->show();
         ui->freeParkingBox->show();
+        ui->timeConstraintCheckbox->show();
     }
     else {
         //Not enabled, hide additionl parking options
@@ -316,6 +358,7 @@ void::Widget::parkingToggle() {
         ui->parkingResultLabel->hide();
         ui->parkingTypeLabel->hide();
         ui->freeParkingBox->hide();
+        ui->timeConstraintCheckbox->hide();
     }
 }
 

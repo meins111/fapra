@@ -13,5 +13,6 @@ public:
 	virtual Node &getNode(size_t index) = 0;
 	virtual Edge &getEdge(size_t index) = 0;
     virtual size_t numEdges() = 0;
+    virtual size_t numNodes() = 0;
 };
 

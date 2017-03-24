@@ -59,7 +59,6 @@ HEADERS  += widget.h\
             GraphLayer/GraphLayer.h\
             TestGraph/PODEdge.h\
             TestGraph/PODNode.h\
-            TestGraph/TestGraph.h\
             MapWidget/MapWidget.h \
             #logwriter.h \
             backup/ui_widget.h \

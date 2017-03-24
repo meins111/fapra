@@ -36,6 +36,7 @@ public:
     Node &getNode(size_t index);
     Edge &getEdge(size_t index);
     size_t numEdges();
+    size_t numNodes () { return connectGraph.nodes.size(); }
 
     /* Utility method to get the
      *
@@ -47,7 +48,7 @@ public:
     /* Use this method to get the closest Navigation Node for a arbitrary nodeInfo node */
     NodeInfo& getClosestNode (const NodeInfo &curPos);
 
-    long int getNodesWithinRadius (const NodeInfo &curPos, double radius, std::vector<size_t> &closeNodeIds);
+    long int getNodesWithinRadius (const NodeInfo &curPos, double radius, std::vector<size_t> &closeNodeIds) const;
 
     /* Arbitrary node wrapper of the getClosestNode-method */
     NodeInfo& getClosestNode (const double &lon, const double &lat);

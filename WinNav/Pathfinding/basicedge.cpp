@@ -12,6 +12,7 @@ BasicEdge & BasicEdge::operator= ( const BasicEdge & copy) {
     endNode=copy.endNode;
     index=copy.index;
     edgeInfoId=copy.edgeInfoId;
+    type=copy.type;
     return *this;
 }
 
