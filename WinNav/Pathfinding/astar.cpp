@@ -222,6 +222,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
     while (!openSet.empty()) {
         //Fetch the most promising node
         OpenNode_t current = prioQueue.top();
+        NodeInfo &curNode = graph.nodeInfo.nodeData[current.id];
         //And remove it - as we only have to expand each node once
         prioQueue.pop();
         openSet.erase(current.id);
@@ -262,7 +263,8 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 //Check the next adjacent node
                 continue;
             }
-            BasicEdge &adjacentEdge = graph.getAdjacentEdge(adjacentNode.localID, i);
+            //And the edge connecting the current node with It's adjacent one
+            BasicEdge &adjacentEdge = graph.getAdjacentEdge(curNode.localID, i);
             EdgeInfo &adjacentEdgeInfo = graph.edgeInfo[adjacentEdge.edgeInfoId];
             //Check if the current travel medium is allowed to travel on this edge at all
             if ((adjacentEdgeInfo.allowance & curMedium) == 0) {
