@@ -70,7 +70,7 @@ public:
     void enableParkingSearch () {parkingSearch=true;}
     void disableParkingSearch () {parkingSearch=false;}
 
-    void getVisitedNodes (std::vector<PODNode> &visited) {pathfinder.getVisitedNodes(visited);}
+    //void getVisitedNodes (std::vector<PODNode> &visited) {pathfinder.getVisitedNodes(visited);}
 
     void reset();
 

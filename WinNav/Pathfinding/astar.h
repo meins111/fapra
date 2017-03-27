@@ -75,7 +75,8 @@ public:
 
     void getNavNodesOnRoute(std::vector<size_t> &nodes);
 
-    void getVisitedNodes (std::vector<PODNode> &visited);
+//DEBUG ONLY
+//    void getVisitedNodes (std::vector<PODNode> &visited);
 
 private:
     //The error code of the last routing run
@@ -105,7 +106,7 @@ private:
     std::vector<size_t> routeNavEdges;
 
     //debug array storing all expanded nodes
-    std::vector<NodeInfo> expandedNodes;
+    //std::vector<NodeInfo> expandedNodes;
 
     //Flag indicates which criteria has to be tracked: travel time (true) or travel distance (false)
     bool timeIsPrio;

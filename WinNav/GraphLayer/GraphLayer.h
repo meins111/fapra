@@ -31,6 +31,8 @@ protected:
     void paintParkingSpot(Marble::GeoPainter *painter, Node &node);
     void paintEdge(Marble::GeoPainter *painter, Node &start, Node &end, edgeType_t type);
     void paintWalkingNode(Marble::GeoPainter *painter, Node &node);
+    void paintStartNode (Marble::GeoPainter *painter, Node &node);
+    void paintTargetNode(Marble::GeoPainter *painter, Node &node);
 public:
 	GraphLayer();
 	virtual ~GraphLayer();

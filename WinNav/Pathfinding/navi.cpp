@@ -305,6 +305,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                     info.osmID = nodes.id();
                     info.localID=parkingGraph.nodeInfo.nodeData.size()-1;
                     info.allowsParking=true;
+                    info.parkingPropertyID=parkingNodeInfo.size()-1;
                 }
 
                 //Check the next node
@@ -364,8 +365,12 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                     fullGraph.connectGraph.edges.emplace_back(tarOffset, srcOffset, fullGraph.connectGraph.edges.size(), i);
                 }
             }
+            //The current EdgeInfo is done ... we can now delete it's metaEdge array and free some memory along the way
+            edge.isMetaEdge=false;
+            edge.subEdges.clear();
+            edge.subEdges.shrink_to_fit();
         }
-        //Shrink to fit on the vectors
+        //Shrink to fit on the vector to constrain the capacity
         fullGraph.connectGraph.edges.shrink_to_fit();
 
         //Update progress if a updateStruct is provided
@@ -414,7 +419,6 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
             //this will help with the correct detection of nodes without outgoing edges!
         }
         //At the end, insert the end of the last nodes' edges
-        ///TODO: Letzter 'Last' Eintrag nochmal durchdenken ob dies nicht .size() sein müsste, da one-past-the-end!
         nodeIt->lastEdge = fullGraph.connectGraph.edges.size();
         //Calculate the partial distances of each edge
         fullGraph.calculateEdgeDistances();
@@ -771,7 +775,7 @@ int Navi::fetchClosestParkingSolution (size_t& closestParkingSpotID, const NodeI
             assert ((curSpot.allowsParking == true) && (curSpot.parkingPropertyID < parkingNodeInfo.size()));
             ParkingSolution &spotInfo = parkingNodeInfo[curSpot.parkingPropertyID];
             //Now check for a possible match
-            if (parkingSearchParams==spotInfo) {
+            if (spotInfo.matches(parkingSearchParams)) {
                 //positive match, and the closest as well (otherwise we either would have ended already)
                 closestParkingSpotID = spotIDs[i];
                 //So: return the node id of this spot!
@@ -800,7 +804,7 @@ int Navi::fetchClosestParkingSolution (size_t& closestParkingSpotID, const NodeI
             assert ((curSpot.allowsParking == true) && (curSpot.parkingPropertyID < parkingNodeInfo.size()));
             ParkingSolution &spotInfo = parkingNodeInfo[curSpot.parkingPropertyID];
             //Now check for a possible match
-            if (parkingSearchParams==spotInfo) {
+            if (spotInfo.matches(parkingSearchParams)) {
                 //positive match, and the closest as well (otherwise we either would have ended already)
                 //So: return the node id of this spot!
                 logger->info("... found a positive match with the parking node ID %v.", spotIDs[i]);

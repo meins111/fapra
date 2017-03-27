@@ -5,24 +5,29 @@ ParkingSolution::ParkingSolution()
 
 }
 
-bool ParkingSolution::operator ==(const ParkingSolution &request) const {
-    if (request.publicParking && !publicParking)
+bool ParkingSolution::matches(const ParkingSolution &request) const {
+    //If the request searches for public parking, and it is not set return false
+    if (request.publicParking && !publicParking) {
         return false;
-    if (request.privateParking && !privateParking)
+    }
+    //If the request searches for customer parking, and this parking is whether a customer nor a public parking
+    if (request.customerParking && (!customerParking && !publicParking)) {
         return false;
-    if (request.customerParking && !customerParking)
+    }
+    //If the request searches for private parking, and this parking is whether a private nor a public parking
+    if (request.privateParking && (!privateParking && !publicParking)) {
         return false;
-    if (request.freeParking && !freeParking)
+    }
+    //If the request searches for free parking and it is not set
+    if (request.freeParking && !freeParking) {
         return false;
-    if (request.constraintTime && !constraintTime)
+    }
+    //If the request searches for unlimited parking and the parking spot is limited ...
+    if (!request.constraintTime && constraintTime) {
         return false;
-    //Positive equalitiy match -> return true
+    }
+    //If all the above does not apply ... we have a match!
     return true;
-}
-
-bool ParkingSolution::operator !=(const ParkingSolution &request) const {
-    //Inverse positive match
-    return !(*this==request);
 }
 
 

@@ -10,16 +10,14 @@ class ParkingSolution
 public:
     ParkingSolution();
 
-    /** Positive equality check: checks if each set flag in the request is also set in the match
-     * Does not check for equality of flags, that are marked 'false' ion the request in the first place.
-     * Use to check, if one parking spot has all requested properties. Any additional properties the spot may have are ignored
+    /** Utility method to check the current object against a request.
+     * @brief matches Return true if the object matches the request according to the parameters.
+     * @param request The request who stores the search parameters.
+     * @return True if the object matches the request. False otherwise.
+     * Checking private/customer parameters will also consult the public parking parameter.
+     * If searching for private/customer parking, public spots will also return true if the other parameters also match.
      */
-    bool operator== (const ParkingSolution &request) const;
-
-    /** Negation of the positive equality check: return true if any marked flag of the request is not marked in the match as well
-     * Use to check, if one parking spot misses at least one requested property.
-     */
-    bool operator!= (const ParkingSolution &request) const;
+    bool matches(const ParkingSolution &request) const;
 
     //Utility method to fetch all informations using a dedicated parking filter on a osm node
     void buildFromDedicatedParkingFilter(osmDedicatedParkingFilter_t &filter, osmpbf::INodeStream &nodes);

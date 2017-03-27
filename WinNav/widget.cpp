@@ -210,10 +210,10 @@ void Widget::parseProgress(int percentProgress) {
 void Widget::parsingDone(int returnCode) {
     //Check for errors
     if (returnCode>100 || returnCode<0) {
-        ui->progressBar->setValue(0);
-        QString errMsg = "FAILED with Error-Code: ";
-        errMsg.append(returnCode);
-        ui->messageLabel->setText(errMsg);
+        stringstream errString;
+        errString << "FAILED with Error-Code: " << returnCode;
+        string errMsg = errString.str();
+        ui->sucessFailureLabel->setText(QString::fromStdString(errMsg));
         return;
     }
     //Else set the progress to 100 and set success label message
@@ -240,15 +240,17 @@ void Widget::pathfindingDone(int returnCode) {
     //Check for errors
     if (returnCode>100 || returnCode<0) {
         ui->routingProgressBar->setValue(0);
-        QString errMsg = "FAILED with Error-Code: ";
-        errMsg.append((char)returnCode);
-        ui->sucessFailureLabel->setText(errMsg);
-        //Print all expanded nodes for debugging
-        std::vector<PODNode> visited;
+        stringstream errString;
+        errString << "FAILED with Error-Code: " << returnCode;
+        string errMsg = errString.str();
+        ui->sucessFailureLabel->setText(QString::fromStdString(errMsg));
+        //May Print all expanded nodes for debugging -> enable methods in AStar and Navi class
+        /*std::vector<PODNode> visited;
         navi.getVisitedNodes(visited);
         path.insertNodes(visited);
         mapWidget->getGraphLayer().setGraph(path);
         mapWidget->update();
+        */
         return;
     }
     //Else set the progress to 100 and set success label message

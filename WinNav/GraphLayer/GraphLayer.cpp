@@ -48,7 +48,22 @@ void GraphLayer::paintNotification(GeoPainter *painter, Notification &note) {
 
 	painter->setPen( Qt::black );
 	painter->setBrush( Oxygen::raspberryPink1 );
-	painter->drawEllipse(note.coordinates, 12, 12, false);
+    painter->drawEllipse(note.coordinates, 10, 10, false);
+}
+
+void GraphLayer::paintStartNode (Marble::GeoPainter *painter, Node &node) {
+    GeoDataCoordinates coord(node.getLongitude(), node.getLatitude(), 0, GeoDataCoordinates::Degree);
+    painter->setPen( Qt::black );
+    painter->setBrush( Oxygen::brickRed1 );
+    painter->drawEllipse(coord, 10, 10, false);
+}
+
+void GraphLayer::paintTargetNode(Marble::GeoPainter *painter, Node &node) {
+    GeoDataCoordinates coord(node.getLongitude(), node.getLatitude(), 0, GeoDataCoordinates::Degree);
+    painter->setPen( Qt::black );
+    painter->setBrush( Oxygen::emeraldGreen1 );
+    painter->drawEllipse(coord, 10, 10, false);
+
 }
 
 void GraphLayer::paintNode(GeoPainter * painter, Node &node) {
@@ -63,7 +78,7 @@ void GraphLayer::paintParkingSpot(Marble::GeoPainter *painter, Node &node) {
     GeoDataCoordinates coord(node.getLongitude(), node.getLatitude(), 0, GeoDataCoordinates::Degree);
     painter->setPen( Qt::black );
     painter->setBrush( Oxygen::seaBlue1 );
-    painter->drawEllipse(coord, 12, 12, false);
+    painter->drawEllipse(coord, 10, 10, false);
 }
 
 void GraphLayer::paintWalkingNode(Marble::GeoPainter *painter, Node &node) {
@@ -78,19 +93,32 @@ void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end, edgeT
 	GeoDataCoordinates endCoord(end.getLongitude(), end.getLatitude(), 0, GeoDataCoordinates::Degree);
 	GeoDataLineString lineString;
 	lineString << startCoord << endCoord;
-    switch (type) {
-    case UNDEFINED:
-        painter->setPen( Qt::black );
-        break;
-    case CARDRIVE:
-        painter->setPen ( Qt::black );
-        break;
-    case FOOTWALK:
-        painter->setPen( Qt::blue );
-        break;
-    case BIKERIDE:
-        painter->setPen( Qt::green );
-        break;
+    /*
+        QPen pen(Qt::black, 2, Qt::SolidLine);
+        qp->setPen(pen);
+*/
+    switch(type) {
+        case CARDRIVE: {
+            QPen carPen (Qt::blue, 4, Qt::SolidLine);
+            painter->setPen(carPen);
+            break;
+        }
+        case FOOTWALK: {
+            QPen footPen (Qt::green, 4, Qt::DashDotLine);
+            painter->setPen(footPen);
+            break;
+        }
+        case BIKERIDE: {
+            QPen bikePen (Qt::yellow, 4, Qt::SolidLine);
+            painter->setPen(bikePen);
+            break;
+        }
+        default:
+        case UNDEFINED: {
+            QPen undefPen (Qt::gray, 1, Qt::SolidLine);
+            painter->setPen(undefPen);
+            break;
+        }
     }
 	painter->drawPolyline(lineString);
 }
@@ -117,19 +145,47 @@ void GraphLayer::paintGraph(Marble::GeoPainter * painter) {
 
 	size_t edges = graph->numEdges();    
     size_t nodes = graph->numNodes();
-    for (size_t i=0; i<nodes; i++) {
-        Node &cur = graph->getNode(i);
-        paintNode (painter, cur);
+    if (edges==0) {
+        //Only print the nodes
+        for (size_t i=0; i<nodes; i++) {
+            Node &cur = graph->getNode(i);
+            paintNode (painter, cur);
+        }
+        return;
     }
+    //Otherwise neatly draw the edges and nodes along them - take special care for switching edge-Types
+    edgeType_t prev=graph->getEdge(0).getEdgeType();
+    //as those are much likely point-of-interests
+    //Also draw the first and last node bigger
 	for(size_t i=0 ; i < edges ; ++i) {
-		Edge &edge = graph->getEdge(i);
-		Node &start = graph->getNode( edge.getStart() );
-		Node &end = graph->getNode( edge.getEnd() );
-
-        //paintNode( painter, start);
-        //paintNode( painter, end);
-        paintEdge( painter, start, end, edge.getEdgeType());
-
+        Edge &edge = graph->getEdge(i);
+        Node &start = graph->getNode( edge.getStart() );
+        Node &end = graph->getNode( edge.getEnd() );
+        if (i==0) {
+            //First edge -> draw the first node bigger!
+            paintStartNode(painter, start);
+            //paintNode(painter, end);
+            paintEdge( painter, start, end, edge.getEdgeType());
+        }
+        else if (i==edges-1) {
+            //last edges -> draw the last edge bigger!
+            //paintNode(painter, start);
+            paintTargetNode(painter, end);
+            paintEdge( painter, start, end, edge.getEdgeType());
+        }
+        else if (edge.getEdgeType() != prev) {
+            //A switch in the edge type most likely means a PoI! Draw it bigger!
+            paintParkingSpot(painter, start);
+            paintNode(painter, end);
+            //paintEdge( painter, start, end, edge.getEdgeType());
+        }
+        else {
+            //Intermediate edge - We'll not want to paint intermediate nodes
+            //paintNode(painter, start);
+            //paintNode(painter, end);
+            paintEdge( painter, start, end, edge.getEdgeType());
+        }
+        prev=edge.getEdgeType();
 	}
 }
 /*
