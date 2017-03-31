@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <cstdlib>
 #include <algorithm>
+#include <sstream>
 
 
 using namespace std;
@@ -166,6 +167,12 @@ void Widget::startRouting() {
     std::setlocale(LC_NUMERIC, "en_US.UTF-8");
     double startLon, startLat, endLat, endLon;
     //transform text boxe to double-coordinates - on the way make sure all commata are replaced with dots
+    startLon = toFloat(ui->startLongitude->text().toStdString());
+    startLat = toFloat(ui->startLatitude->text().toStdString());
+    endLon = toFloat(ui->endLongitude->text().toStdString());
+    endLat = toFloat(ui->endLatitude->text().toStdString());
+
+    /*
     std::string tmp = ui->startLongitude->text().toStdString();
     std::replace(tmp.begin(), tmp.end(), ',', '.');
     startLon = std::stod(tmp, NULL);
@@ -180,7 +187,7 @@ void Widget::startRouting() {
 
     tmp = ui->endLatitude->text().toStdString();
     std::replace(tmp.begin(), tmp.end(), ',', '.');
-    endLat = std::stod(tmp, NULL);
+    endLat = std::stod(tmp, NULL);*/
 
     PODNode start(startLon, startLat);
     PODNode target(endLon, endLat);
@@ -399,3 +406,10 @@ void::Widget::parkingToggle() {
     }
 }
 
+float Widget::toFloat(std::string str) {
+    float f;
+    std::istringstream iStrStream(str);
+    iStrStream.imbue(std::locale("C"));
+    iStrStream >> f;
+    return f;
+}

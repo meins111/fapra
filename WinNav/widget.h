@@ -57,6 +57,7 @@ public slots:
 
 private slots:
     void on_showGraph_clicked();
+    float toFloat(std::string str);
 
 private:
     Ui::Widget *ui;

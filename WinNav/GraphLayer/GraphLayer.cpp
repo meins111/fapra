@@ -7,6 +7,8 @@
 #include "GraphLayer.h"
 #include <marble/GeoDataLineString.h>
 #include <iostream>
+#include <vector>
+
 using namespace std;
 using namespace Marble;
 
@@ -88,6 +90,43 @@ void GraphLayer::paintWalkingNode(Marble::GeoPainter *painter, Node &node) {
     painter->drawEllipse(coord, 8, 8, false);
 }
 
+void GraphLayer::paintEdge(Marble::GeoPainter *painter, std::vector<Node *>&edgesNodes, edgeType_t type) {
+    GeoDataLineString lineString;
+    //Iterate over all stored edge
+    for (auto it=edgesNodes.begin(); it!=edgesNodes.end(); ++it) {
+        Node *curNode = *it;
+        if (curNode!=NULL) {
+            GeoDataCoordinates coord(curNode->getLatitude(), curNode->getLongitude(), 0, GeoDataCoordinates::Degree);
+            lineString << coord;
+        }
+    }
+    switch(type) {
+        case CARDRIVE: {
+            QPen carPen (Qt::blue, 4, Qt::SolidLine);
+            painter->setPen(carPen);
+            break;
+        }
+        case FOOTWALK: {
+            QPen footPen (Qt::green, 4, Qt::DashDotLine);
+            painter->setPen(footPen);
+            break;
+        }
+        case BIKERIDE: {
+            QPen bikePen (Qt::yellow, 4, Qt::SolidLine);
+            painter->setPen(bikePen);
+            break;
+        }
+        default:
+        case UNDEFINED: {
+            QPen undefPen (Qt::gray, 1, Qt::SolidLine);
+            painter->setPen(undefPen);
+            break;
+        }
+    }
+    painter->drawPolyline(lineString);
+}
+
+
 void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end, edgeType_t type) {
 	GeoDataCoordinates startCoord(start.getLongitude(), start.getLatitude(), 0, GeoDataCoordinates::Degree);
 	GeoDataCoordinates endCoord(end.getLongitude(), end.getLatitude(), 0, GeoDataCoordinates::Degree);
@@ -145,9 +184,11 @@ void GraphLayer::paintGraph(Marble::GeoPainter * painter) {
 
 	if(graph == NULL)
 		return;
-
+    std::vector<Node*> edgeNodes;
 	size_t edges = graph->numEdges();    
     size_t nodes = graph->numNodes();
+    edgeNodes.reserve(nodes);
+
     if (edges==0) {
         //Only print the nodes
         for (size_t i=0; i<nodes; i++) {
@@ -164,32 +205,38 @@ void GraphLayer::paintGraph(Marble::GeoPainter * painter) {
         Edge &edge = graph->getEdge(i);
         Node &start = graph->getNode( edge.getStart() );
         Node &end = graph->getNode( edge.getEnd() );
+        edgeNodes.push_back(&start);
         if (i==0) {
             //First edge -> draw the first node bigger!
             paintStartNode(painter, start);
             //paintNode(painter, end);
-            paintEdge( painter, start, end, edge.getEdgeType());
+            //paintEdge( painter, start, end, edge.getEdgeType());
         }
         else if (i==edges-1) {
             //last edges -> draw the last edge bigger!
             //paintNode(painter, start);
             paintTargetNode(painter, end);
-            paintEdge( painter, start, end, edge.getEdgeType());
+            edgeNodes.push_back(&end);
+            //paintEdge( painter, start, end, edge.getEdgeType());
         }
         else if (edge.getEdgeType() != prev) {
             //A switch in the edge type most likely means a PoI! Draw it bigger!
             paintParkingSpot(painter, start);
-            paintNode(painter, end);
+            //paintNode(painter, end);
+            paintEdge(painter, edgeNodes, prev);
+            edgeNodes.clear();
+            edgeNodes.push_back(&start);
             //paintEdge( painter, start, end, edge.getEdgeType());
         }
         else {
             //Intermediate edge - We'll not want to paint intermediate nodes
             //paintNode(painter, start);
             //paintNode(painter, end);
-            paintEdge( painter, start, end, edge.getEdgeType());
+            //paintEdge( painter, start, end, edge.getEdgeType());
         }
         prev=edge.getEdgeType();
 	}
+    paintEdge(painter, edgeNodes, prev);
 }
 /*
 void GraphLayer::paintCarDriveGraph(Marble::GeoPainter *painter, bool parkingAtTarget) {
