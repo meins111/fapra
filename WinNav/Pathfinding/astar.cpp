@@ -62,7 +62,7 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
     //Reset the current route
     route.reset();
     //Pred Map empty?
-    if (predecessorMap.size()==0) {
+    if ((predecessorMap.size()==0) && (start != target)) {
         errorCode=PREDECESSOR_MAP_EMPTY;
         if (updateStruct) {
             updateStruct->updateProgress(errorCode);

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <pthread.h>
 #include <cstdlib>
+#include <algorithm>
 
 
 using namespace std;
@@ -164,11 +165,23 @@ void Widget::startRouting() {
     //Set english decimal dot as forced locale for deciaml dot
     std::setlocale(LC_NUMERIC, "en_US.UTF-8");
     double startLon, startLat, endLat, endLon;
+    //transform text boxe to double-coordinates - on the way make sure all commata are replaced with dots
     std::string tmp = ui->startLongitude->text().toStdString();
+    std::replace(tmp.begin(), tmp.end(), ',', '.');
     startLon = std::stod(tmp, NULL);
-    startLat = atof(ui->startLatitude->text().toStdString().c_str());
-    endLon = atof(ui->endLongitude->text().toStdString().c_str());
-    endLat = atof(ui->endLatitude->text().toStdString().c_str());
+
+    tmp = ui->startLatitude->text().toStdString();
+    std::replace(tmp.begin(), tmp.end(), ',', '.');
+    startLat = std::stod(tmp, NULL);
+
+    tmp = ui->endLongitude->text().toStdString();
+    std::replace(tmp.begin(), tmp.end(), ',', '.');
+    endLon = std::stod(tmp, NULL);
+
+    tmp = ui->endLatitude->text().toStdString();
+    std::replace(tmp.begin(), tmp.end(), ',', '.');
+    endLat = std::stod(tmp, NULL);
+
     PODNode start(startLon, startLat);
     PODNode target(endLon, endLat);
     slave.setStart(start);
@@ -281,7 +294,7 @@ void Widget::pathfindingDone(int returnCode) {
     }
     navi.getShortestRouteGraph(path);
     //Check the returned graph
-    if (path.numNodes()<2) {
+    if (path.numNodes()==0) {
         //This seems to be broken!
         ui->sucessFailureLabel->setText("Error: Path empty!");
         return;
