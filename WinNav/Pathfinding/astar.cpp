@@ -57,6 +57,8 @@ void AStar::calculateProgress(const OpenNode_t &cur, size_t start, size_t target
 }
 
 void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct) {
+    el::Logger* logger = el::Loggers::getLogger("default");
+    logger->info("Building the path from Node %v to Node %v.", start, target);
     //Reset the current route
     route.reset();
     //Pred Map empty?
@@ -101,6 +103,7 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
                 //This is not good. We are not yet done but the node has to pred entry
                 errorCode=PREDECESSOR_MAP_BROKEN;
                 if (updateStruct) {
+                    logger->error("Path-Construction: Target not yet reached, but no stored predecessor. Something broke!");
                     updateStruct->updateProgress(errorCode);
                 }
                 //Clear broken graph
@@ -129,7 +132,7 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
             curNodeId=predNodeId;
             curNode = predNode;
         }
-
+        logger->info("Path-Construction: All nodes fetched. Constructing the edges...");
         //All path nodes added, now construct the edges backwards
         if (updateStruct) {
             updateStruct->updateProgress(97);
@@ -153,6 +156,7 @@ void AStar::constructPath (size_t start, size_t target, CondWait_t *updateStruct
                 break;
             }
         }
+        logger->info("Path-Construction: Done.");
         /* Debug Print to check edge properties, espacially the speed tag which was problematic for some time*/
         //Print the edge infos of all path edges
         /*
