@@ -211,7 +211,16 @@ void Widget::parsingDone(int returnCode) {
     //Check for errors
     if (returnCode>100 || returnCode<0) {
         stringstream errString;
-        errString << "FAILED with Error-Code: " << returnCode;
+        switch (returnCode) {
+            case -6: {
+                errString << "File not found or invalid format!";
+                break;
+            }
+            default: {
+                errString << "FAILED with Error-Code: " << returnCode;
+                break;
+            }
+        }
         string errMsg = errString.str();
         ui->sucessFailureLabel->setText(QString::fromStdString(errMsg));
         return;
@@ -241,7 +250,20 @@ void Widget::pathfindingDone(int returnCode) {
     if (returnCode>100 || returnCode<0) {
         ui->routingProgressBar->setValue(0);
         stringstream errString;
-        errString << "FAILED with Error-Code: " << returnCode;
+        switch (returnCode) {
+            case -4: {
+                errString << "Target Unreachable!";
+                break;
+            }
+            case -40: {
+                errString << "No matching Parking Spot within 1km!";
+                break;
+            }
+            default: {
+                errString << "FAILED with Error-Code: " << returnCode;
+                break;
+            }
+        };
         string errMsg = errString.str();
         ui->sucessFailureLabel->setText(QString::fromStdString(errMsg));
         //May Print all expanded nodes for debugging -> enable methods in AStar and Navi class
@@ -298,6 +320,7 @@ void Widget::pathfindingDone(int returnCode) {
     mapWidget->update();
     mapWidget->setCenterLatitude(path.getNode(0).getLatitude());
     mapWidget->setCenterLongitude(path.getNode(0).getLongitude());
+    mapWidget->setDistance(1.0);
     //TODO: Get and draw the path if successful
     /*
     //Draw it
