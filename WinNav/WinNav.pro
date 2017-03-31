@@ -33,7 +33,6 @@ SOURCES +=        main.cpp\
 		  TestGraph/PODEdge.cpp\
                   TestGraph/PODNode.cpp\
 		  MapWidget/MapWidget.cpp \
-                  #logwriter.cpp \
     #moc_widget.cpp \
     Pathfinding/basicgraph.cpp \
     Pathfinding/basicnode.cpp \
@@ -59,7 +58,6 @@ HEADERS  += widget.h\
             TestGraph/PODEdge.h\
             TestGraph/PODNode.h\
             MapWidget/MapWidget.h \
-            #logwriter.h \
             backup/ui_widget.h \
             GraphInterface/Edge.h \
             GraphInterface/Graph.h \

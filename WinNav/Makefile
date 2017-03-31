@@ -476,7 +476,6 @@ moc_widget.cpp: MapWidget/MapWidget.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
 		Utils/slaver.h \
-		logwriter.h \
 		widget.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/jochen/Dokumente/Uni/osm_fapra/WinNav -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf/osmpbf/include -I/usr/include/google/protobuf -I/usr/lib/x86_64-linux-gnu -I/usr/include -I/home/jochen/Dokumente/Uni/osm_fapra/nanoflann/include -I/usr/local/boost_1_63_0 -I/usr/lib/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include widget.h -o moc_widget.cpp
 
@@ -526,7 +525,6 @@ moc_slaver.cpp: TestGraph/lineargraph.h \
 		stopworkingexception.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
-		logwriter.h \
 		Utils/slaver.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/jochen/Dokumente/Uni/osm_fapra/WinNav -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf -I/home/jochen/Dokumente/Uni/osm_fapra/osmpbf/osmpbf/include -I/usr/include/google/protobuf -I/usr/lib/x86_64-linux-gnu -I/usr/include -I/home/jochen/Dokumente/Uni/osm_fapra/nanoflann/include -I/usr/local/boost_1_63_0 -I/usr/lib/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include Utils/slaver.h -o moc_slaver.cpp
 
@@ -597,8 +595,7 @@ main.o: main.cpp widget.h \
 		TestGraph/PODNode.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
-		Utils/slaver.h \
-		logwriter.h
+		Utils/slaver.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 widget.o: widget.cpp widget.h \
@@ -651,7 +648,6 @@ widget.o: widget.cpp widget.h \
 		Pathfinding/astar.h \
 		Utils/ErrorCodes.h \
 		Utils/slaver.h \
-		logwriter.h \
 		ui_widget.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o widget.o widget.cpp
 
@@ -883,8 +879,7 @@ slaver.o: Utils/slaver.cpp Utils/slaver.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
 		Pathfinding/astar.h \
-		Utils/ErrorCodes.h \
-		logwriter.h
+		Utils/ErrorCodes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o slaver.o Utils/slaver.cpp
 
 easylogging++.o: Utils/easylogging++.cc Utils/easylogging++.h

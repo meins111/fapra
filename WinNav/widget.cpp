@@ -1,6 +1,5 @@
 #include "widget.h"
 #include "ui_widget.h"
-#include "logwriter.h"
 #include <sstream>
 #include <cmath>
 #include <pthread.h>

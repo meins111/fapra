@@ -100,16 +100,19 @@ void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end, edgeT
     switch(type) {
         case CARDRIVE: {
             QPen carPen (Qt::blue, 3, Qt::SolidLine);
+            carPen.setWidth(3);
             painter->setPen(carPen);
             break;
         }
         case FOOTWALK: {
             QPen footPen (Qt::green, 3, Qt::DashDotLine);
+            footPen.setWidth(3);
             painter->setPen(footPen);
             break;
         }
         case BIKERIDE: {
             QPen bikePen (Qt::yellow, 3, Qt::SolidLine);
+            bikePen.setWidth(3);
             painter->setPen(bikePen);
             break;
         }
