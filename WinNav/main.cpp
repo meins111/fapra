@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 */
     LOG(INFO) << "Programm started.";
     QApplication a(argc, argv);
-
+    a.setApplicationName("ParkMe-Nav");
     Widget w;
     w.show();
 

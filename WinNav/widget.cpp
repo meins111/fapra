@@ -18,6 +18,7 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
     ui->setupUi(this);
+    this->setWindowTitle("ParkMe-Navigator");
     ui->topWidget->setFixedHeight(200);
     //Progress bar and labels setup
     ui->progressBar->setMinimum(0);

@@ -96,9 +96,10 @@ void GraphLayer::paintEdge(Marble::GeoPainter *painter, std::vector<Node *>&edge
     for (auto it=edgesNodes.begin(); it!=edgesNodes.end(); ++it) {
         Node *curNode = *it;
         if (curNode!=NULL) {
-            GeoDataCoordinates coord(curNode->getLatitude(), curNode->getLongitude(), 0, GeoDataCoordinates::Degree);
-            lineString << coord;
+            std::runtime_error("LineString to draw Path contained a NULL-Pointer.");
         }
+        GeoDataCoordinates coord(curNode->getLongitude(), curNode->getLatitude(), 0, GeoDataCoordinates::Degree);
+        lineString << coord;
     }
     switch(type) {
         case CARDRIVE: {
