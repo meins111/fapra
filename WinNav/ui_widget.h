@@ -242,8 +242,8 @@ public:
         movementType->clear();
         movementType->insertItems(0, QStringList()
          << QApplication::translate("Widget", "Auto", 0)
-         << QApplication::translate("Widget", "Fahrrad", 0)
          << QApplication::translate("Widget", "Fu\303\237g\303\244nger", 0)
+         << QApplication::translate("Widget", "Fahrrad", 0)
         );
         startLatitude->setText(QApplication::translate("Widget", "48.9422", 0));
         startLongitude->setText(QApplication::translate("Widget", "9.30089", 0));

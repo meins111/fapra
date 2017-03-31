@@ -63,7 +63,6 @@ NodeInfo& NavGraph::getClosestNode (const NodeInfo &curPos) {
     size_t closestNodeOffset=0xFFFFFFFF;
     double origin [2] = {curPos.longitude, curPos.latitude};
     double distToClosest=0.0;
-    ///Instead findNeighbours method?
     nanoflann::KNNResultSet<double> resSet(1);
     resSet.init(&closestNodeOffset, &distToClosest);
     closenessTree.findNeighbors(resSet, &origin[0], nanoflann::SearchParams(10));
@@ -73,11 +72,55 @@ NodeInfo& NavGraph::getClosestNode (const NodeInfo &curPos) {
     else {
         return nodeInfo.nodeData[closestNodeOffset];
     }
-    /*
-    //Search the closest node of the nodeInfo vector and store its index and distance to the given target
-    closenessTree.knnSearch(&origin[0], 1, &closestNodeOffset, &distToClosest);
-    return nodeInfo.nodeData[closestNodeOffset];
-    */
+}
+
+NodeInfo& NavGraph::getClosestNode(const double &lon, const double &lat, TravelMedium accessible) {
+    NodeInfo curPos;
+    curPos.longitude=lon;
+    curPos.latitude=lat;
+    return getClosestNode(curPos, accessible);
+}
+
+NodeInfo& NavGraph::getClosestNode(const NodeInfo &curPos, TravelMedium accessible) {
+    bool foundNode=false;
+    double radius=10;   //m
+    long int resCnt=0, resOld=0;
+    std::vector <size_t> results;
+    while (!foundNode) {
+        resCnt=getNodesWithinRadius(curPos, radius, results);
+        if (resCnt==resOld) {
+            //No new nodes were found in that last radius increment, so retry with a doubled radius
+            results.clear();
+            radius *=2;
+            continue;
+        }
+        else if (resCnt == connectGraph.nodes.size()) {
+            //No node in the graph is accessible by the medium, so throw a exception
+            throw (std::logic_error("getClosestNode: No Node found which is accessible by the provided Travel Medium!"));
+        }
+        //There are some new points to analyze!
+        //REMEMBER: Nodes are ordered by distance, so first match = searched point
+        for (size_t i=resOld; i<resCnt; i++ ) {
+            //Fetch the currents node
+            size_t curNodeId = results[i];
+            BasicNode &curBasicNode = connectGraph.nodes[curNodeId];
+            NodeInfo &curNode = nodeInfo.nodeData[curNodeId];
+            //Check each of it's adjazent nodes, whether it is reachable by the given medium or not
+            for (size_t j=0; j<curBasicNode.numberOfEdges(); j++) {
+                BasicEdge &curBasicEdge = connectGraph.edges[curBasicNode.firstEdge+j];
+                EdgeInfo &curEdgeInfo = edgeInfo[curBasicEdge.edgeInfoId];
+                if ((curEdgeInfo.allowance & accessible) != 0) {
+                    //Yep, this node has at least one adjacent edge, that allows the given medium, so we have a hit!
+                    return curNode;
+                }
+            }
+        }
+        //If we ever end here, none of the newly fetched nodes, can be accessed by the medium -> retry with doubled radius!
+        results.clear();
+        radius *=2;
+        resOld=resCnt;
+        continue;
+    }
 }
 
 NodeInfo& NavGraph::getClosestNode (const double &lon, const double &lat) {

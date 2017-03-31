@@ -8,6 +8,7 @@
 #include "basicgraph.h"
 #include <stdexcept>
 #include <vector>
+#include "allowancemasks.h"
 
 class NavGraph : public Graph
 {
@@ -48,10 +49,14 @@ public:
     /* Use this method to get the closest Navigation Node for a arbitrary nodeInfo node */
     NodeInfo& getClosestNode (const NodeInfo &curPos);
 
-    long int getNodesWithinRadius (const NodeInfo &curPos, double radius, std::vector<size_t> &closeNodeIds) const;
-
     /* Arbitrary node wrapper of the getClosestNode-method */
     NodeInfo& getClosestNode (const double &lon, const double &lat);
+
+    NodeInfo& getClosestNode(const NodeInfo &curPos, TravelMedium accessible);
+
+    NodeInfo& getClosestNode(const double &lon, const double &lat, TravelMedium accessible);
+
+    long int getNodesWithinRadius (const NodeInfo &curPos, double radius, std::vector<size_t> &closeNodeIds) const;
 
     /* Utility method to fetch the NodeInfo of the offset's adjacent node
      * \param curNode The node to search adjacent nodes from.

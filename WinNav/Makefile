@@ -56,7 +56,6 @@ SOURCES       = main.cpp \
 		GraphLayer/GraphLayer.cpp \
 		TestGraph/PODEdge.cpp \
 		TestGraph/PODNode.cpp \
-		TestGraph/TestGraph.cpp \
 		MapWidget/MapWidget.cpp \
 		Pathfinding/basicgraph.cpp \
 		Pathfinding/basicnode.cpp \
@@ -83,7 +82,6 @@ OBJECTS       = main.o \
 		GraphLayer.o \
 		PODEdge.o \
 		PODNode.o \
-		TestGraph.o \
 		MapWidget.o \
 		basicgraph.o \
 		basicnode.o \
@@ -205,7 +203,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		GraphLayer/GraphLayer.cpp \
 		TestGraph/PODEdge.cpp \
 		TestGraph/PODNode.cpp \
-		TestGraph/TestGraph.cpp \
 		MapWidget/MapWidget.cpp \
 		Pathfinding/basicgraph.cpp \
 		Pathfinding/basicnode.cpp \
@@ -403,7 +400,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents widget.h GraphLayer/GraphLayer.h TestGraph/PODEdge.h TestGraph/PODNode.h MapWidget/MapWidget.h backup/ui_widget.h GraphInterface/Edge.h GraphInterface/Graph.h GraphInterface/Node.h ui_widget.h Pathfinding/basicgraph.h Pathfinding/basicnode.h Pathfinding/basicedge.h Pathfinding/nodeinfo.h Pathfinding/edgeinfo.h Pathfinding/allowancemasks.h Pathfinding/roadtypes.h Pathfinding/closenesstree.h Pathfinding/navgraph.h Pathfinding/navi.h Pathfinding/pathfinder.h Utils/inplacevectorreorder.h TestGraph/lineargraph.h Utils/slaver.h Utils/condwait_t.h Utils/easylogging++.h GraphInterface/pointofinterest.h stopworkingexception.h Pathfinding/astar.h Utils/ErrorCodes.h Pathfinding/ParkingSolution.h Utils/OsmFilterContainer.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp widget.cpp GraphInterface/Node.cpp GraphInterface/Edge.cpp GraphInterface/Graph.cpp GraphLayer/GraphLayer.cpp TestGraph/PODEdge.cpp TestGraph/PODNode.cpp TestGraph/TestGraph.cpp MapWidget/MapWidget.cpp Pathfinding/basicgraph.cpp Pathfinding/basicnode.cpp Pathfinding/basicedge.cpp Pathfinding/nodeinfo.cpp Pathfinding/edgeinfo.cpp Pathfinding/navgraph.cpp Pathfinding/navi.cpp Pathfinding/pathfinder.cpp Utils/inplacevectorreorder.cpp TestGraph/lineargraph.cpp Utils/slaver.cpp Utils/easylogging++.cc GraphInterface/pointofinterest.cpp stopworkingexception.cpp Pathfinding/astar.cpp Pathfinding/ParkingSolution.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp widget.cpp GraphInterface/Node.cpp GraphInterface/Edge.cpp GraphInterface/Graph.cpp GraphLayer/GraphLayer.cpp TestGraph/PODEdge.cpp TestGraph/PODNode.cpp MapWidget/MapWidget.cpp Pathfinding/basicgraph.cpp Pathfinding/basicnode.cpp Pathfinding/basicedge.cpp Pathfinding/nodeinfo.cpp Pathfinding/edgeinfo.cpp Pathfinding/navgraph.cpp Pathfinding/navi.cpp Pathfinding/pathfinder.cpp Utils/inplacevectorreorder.cpp TestGraph/lineargraph.cpp Utils/slaver.cpp Utils/easylogging++.cc GraphInterface/pointofinterest.cpp stopworkingexception.cpp Pathfinding/astar.cpp Pathfinding/ParkingSolution.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents widget.ui $(DISTDIR)/
 
 
@@ -683,9 +680,6 @@ PODNode.o: TestGraph/PODNode.cpp TestGraph/PODNode.h \
 		GraphInterface/Node.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o PODNode.o TestGraph/PODNode.cpp
 
-TestGraph.o: TestGraph/TestGraph.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o TestGraph.o TestGraph/TestGraph.cpp
-
 MapWidget.o: MapWidget/MapWidget.cpp MapWidget/MapWidget.h \
 		GraphLayer/GraphLayer.h \
 		GraphInterface/Graph.h \
@@ -777,7 +771,8 @@ navgraph.o: Pathfinding/navgraph.cpp Pathfinding/navgraph.h \
 		../osmpbf/osmpbf/include/osmpbf/nodestreaminputadaptor.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/basicedge.h \
-		Pathfinding/basicnode.h
+		Pathfinding/basicnode.h \
+		Pathfinding/allowancemasks.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o navgraph.o Pathfinding/navgraph.cpp
 
 navi.o: Pathfinding/navi.cpp Pathfinding/navi.h \
@@ -938,13 +933,13 @@ astar.o: Pathfinding/astar.cpp Pathfinding/astar.h \
 		Pathfinding/basicgraph.h \
 		Pathfinding/basicedge.h \
 		Pathfinding/basicnode.h \
+		Pathfinding/allowancemasks.h \
 		TestGraph/lineargraph.h \
 		TestGraph/PODEdge.h \
 		TestGraph/PODNode.h \
 		Utils/condwait_t.h \
 		stopworkingexception.h \
-		Utils/ErrorCodes.h \
-		Pathfinding/allowancemasks.h
+		Utils/ErrorCodes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o astar.o Pathfinding/astar.cpp
 
 ParkingSolution.o: Pathfinding/ParkingSolution.cpp Pathfinding/ParkingSolution.h \

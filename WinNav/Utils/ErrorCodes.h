@@ -4,6 +4,7 @@
 #define INVALID_INPUT                   -1
 #define TARGET_UNREACHABLE_ERROR        -4
 #define TARGET_OUT_OF_VEHICLE_RANGE     -5
+#define FILE_NOT_FOUND_OR_INVALID       -6
 
 
 #define STARTNODE_NOT_SET               -16

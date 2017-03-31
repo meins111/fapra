@@ -99,17 +99,17 @@ void GraphLayer::paintEdge(GeoPainter * painter, Node & start, Node & end, edgeT
 */
     switch(type) {
         case CARDRIVE: {
-            QPen carPen (Qt::blue, 4, Qt::SolidLine);
+            QPen carPen (Qt::blue, 3, Qt::SolidLine);
             painter->setPen(carPen);
             break;
         }
         case FOOTWALK: {
-            QPen footPen (Qt::green, 4, Qt::DashDotLine);
+            QPen footPen (Qt::green, 3, Qt::DashDotLine);
             painter->setPen(footPen);
             break;
         }
         case BIKERIDE: {
-            QPen bikePen (Qt::yellow, 4, Qt::SolidLine);
+            QPen bikePen (Qt::yellow, 3, Qt::SolidLine);
             painter->setPen(bikePen);
             break;
         }

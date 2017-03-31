@@ -54,6 +54,10 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         if (!osmFile.open()) {
             //Failed to open the file
             logger->error("Failed to open osm file. Check path!");
+            if (updateStruct) {
+                updateStruct->updateProgress(FILE_NOT_FOUND_OR_INVALID);
+                return;
+            }
             throw (std::invalid_argument ("Invalid Path or bad file."));
         }
         else {
@@ -62,6 +66,9 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         //Clear previously parsed data
         fullGraph.clear();
         parkingGraph.clear();
+        composedRoute.reset();
+        fullGraphParsed=false;
+        composedRouteIsReady=false;
         /** Create toolbox to parse **/
         //Primitive Input Block adapter - able to read one protobuf primitive block at a time
         osmpbf::PrimitiveBlockInputAdaptor pbi;
@@ -86,6 +93,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
         if (updateStruct)
                 updateStruct->updateProgress(1);
         uint32_t invalidWays=0;
+        size_t parkingLaneNodeCnt = 0;
         //Loop through all primitve blocks of the file ...
         while (osmFile.parseNextBlock(pbi)) {
             if (pbi.isNull()) {
@@ -98,10 +106,10 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
             dedicatedParkingFilter.refreshAllFilter();
             //Get a waystream - containing all ways of the current primitve block
             osmpbf::IWayStream ways(pbi.getWayStream());
+
             //Loop over all those ways ...
             while (!ways.isNull()) {
                 //Update highway filter
-
                 //Check for highway-tagged ways with more than 2 nodes (others are of course invalid!)
                 if (routingFilter.highwayFilter.matches(ways) && ways.refsSize()>=2) {
                     //So, this way is a highway connecting 2 or more nodes: fetch way data and node id's
@@ -124,6 +132,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         //This is a oneway edge
                         info.isOneWay=true;
                     }
+                    ///Compute the Allowance Mask of this edge according to set tags and way type
                     if (!(routingFilter.footDenied.matches(ways))) {
                         //Foot access is NOT forbidden, so set foot allowance mask
                         info.allowance |= ALLOW_FOOT;
@@ -133,7 +142,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         info.allowance |= ALLOW_BIKE;
                     }
                     if(!(routingFilter.carDenied.matches(ways)) || routingFilter.carExceptions.matches(ways)) {
-                        //Car access is NOT forbidden, so set the car allowance mask
+                        //Car access is NOT forbidden OR there is an explicit exceptional allowance on otherwise forbitten road
+                        //...so set the car allowance mask!
                         info.allowance |= ALLOW_CAR;
                     }
                     //If an edge has an allowance of zero, we can easily ignore it, for no one we're interested in can access it!
@@ -143,6 +153,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         ways.next();
                         continue;
                     }
+                    ///Compute the Maxspeed of the edge according to set tags and street type
                     if (routingFilter.speedFilter.matches(ways)) {
                         //A explicit way speed limit is stated: parse it
                         info.speed=parseOsmSpeedTag(ways.value(routingFilter.speedFilter.matchingTag()));
@@ -183,6 +194,7 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                         //If edge allows lane-parking, add parking offsets for each node along the edge as well
                         if (info.parking) {
                             parkingAreaMap[*wayNodesIt]=parkingNodeInfo.size()-1;
+                            parkingLaneNodeCnt++;
                         }
                     }
                     //Check the next way
@@ -211,7 +223,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 continue;
             }
         }
-        logger->info("Found %v highways, %v invalid ways, %v parking nodes and %v total nodes.", fullGraph.edgeInfo.size(), invalidWays, parkingNodeInfo.size(), osmIdMap.size());
+        logger->info("Found %v highways, %v invalid ways, %v parking nodes and %v total nodes.",
+                     fullGraph.edgeInfo.size(), invalidWays, parkingNodeInfo.size()+parkingLaneNodeCnt, osmIdMap.size());
 
         //Update progress if a updateStruct is provided
         if ( updateStruct )
@@ -312,8 +325,8 @@ void Navi::parsePbfFile(const std::string &path, CondWait_t *updateStruct) {
                 nodes.next();
             }
         }
-        logger->info("Fetched %v street nodes, %v parking nodes.", navNodes, parkingGraph.nodeInfo.nodeData.size());
-
+        logger->info("Fetched %v street nodes, %v parking nodes. Release OSM-File now.", navNodes, parkingGraph.nodeInfo.nodeData.size());
+        osmFile.close();
         //Update progress if a updateStruct is provided
         if ( updateStruct )
             updateStruct->updateProgress( 60 );
@@ -546,80 +559,86 @@ bool Navi::selfCheck() {
 void Navi::shortestPath(PODNode start, PODNode target, CondWait_t *updateStruct) {
     //Create us a logger instance
     el::Logger* logger = el::Loggers::getLogger("default");
-    //Reset previously stored route
-    composedRouteIsReady=false;
-    composedRoute.reset();
-    //Find the closest nav node for start and target nodes and also
-    NodeInfo startNode = fullGraph.getClosestNode(start.getLongitude(), start.getLatitude());
-    NodeInfo targetNode = fullGraph.getClosestNode(target.getLongitude(), target.getLatitude());
-    //If we perform simple search without looking for parking spots, just call a* start-target method and return
-    if (!parkingSearch || (medium != CAR)) {
-        logger->info("Starting simple pathfinding - not searching for parking spots.");
-        pathfinder.findRoute(startNode.localID, targetNode.localID, updateStruct, true);
-        return;
-    }
-    //So... we are to perform parking search: first want to get the closest parking spot for the target
-    logger->info("Parking Search Step 1: Searching the parking spot closest to the taarget fulfilling the set parameters...");
-    size_t parkingID=0xFFFFFFFF;
-    int ret = fetchClosestParkingSolution(parkingID, targetNode);
-    if (ret != 0) {
-        //Some Error occured! Signal an error
-        if (updateStruct)
-            updateStruct->updateProgress(ret);
-        return;
-    }
-    //The matching spot we just found
-    NodeInfo parkSpot = parkingGraph.nodeInfo.nodeData[parkingID];
-    //So we have found a matching parking spot! Now calculate the best path from start to the parking node
-    logger->info("Parking Search Step 2: Found Parking spot. Now calculate the path from start to the parking spot...");
-    //We need to get the closest NavNode for the parking node
-    NodeInfo closeByNavNode = fullGraph.getClosestNode(parkSpot);
-    //Search the car-part of the route from start to parking position (NOTE: false parameter ensures that no 'finish' signal will be emitted
-    pathfinder.findRoute(startNode.localID, closeByNavNode.localID, updateStruct, false);
-    if (pathfinder.getErrorCode() < 0) {
-        //Some error occurred during operation ... propagate and exit
-        if (updateStruct)
-            updateStruct->updateProgress(pathfinder.getErrorCode());
-        return;
-    }
-    //Successful! Now fetch the route and store it, also store the edge cost, so we can calculate the total time
-    pathfinder.getRoute(composedRoute);
-    composedRoute.setEdgeType(CARDRIVE);
-    composedTravelTime=pathfinder.getRouteTravelTime();
-    composedTravelDistance=pathfinder.getRouteDistance();
-    //Now all that is left is to calculate the foot-walk from the parking spot to the target
-    logger->info("Parking Search Step 3: Car-Route-to-Parking-Spot calculated. Now get the Footwalk-to-Target...");
-    pathfinder.setMedium(FOOT);
-    //We want to walk as less as possible!
-    bool oldPrio=timeIsPrio;
-    pathfinder.setRoutingPrio(false);
-    //Search the path!
-    pathfinder.findRoute(closeByNavNode.localID, targetNode.localID, NULL, false);
-    //Restore setting
-    pathfinder.setMedium(CAR);
-    pathfinder.setRoutingPrio(oldPrio);
-    if (pathfinder.getErrorCode() != 0) {
-        //Some error occured on that last step! NOOO! Propagate error code and return
-        if (updateStruct)
-            updateStruct->updateProgress(pathfinder.getErrorCode());
+    try {
+        //Reset previously stored route
+        composedRouteIsReady=false;
         composedRoute.reset();
+        //Find the closest nav node for start and target nodes accessible by the choosen travel medium
+        NodeInfo startNode = fullGraph.getClosestNode(start.getLongitude(), start.getLatitude(), medium);
+        NodeInfo targetNode = fullGraph.getClosestNode(target.getLongitude(), target.getLatitude(), medium);
+        //If we perform simple search without looking for parking spots, just call a* start-target method and return
+        if (!parkingSearch || (medium != CAR)) {
+            logger->info("Starting simple pathfinding - not searching for parking spots.");
+            pathfinder.findRoute(startNode.localID, targetNode.localID, updateStruct, true);
+            return;
+        }
+        //So... we are to perform parking search: first want to get the closest parking spot for the target
+        logger->info("Parking Search Step 1: Searching the parking spot closest to the taarget fulfilling the set parameters...");
+        size_t parkingID=0xFFFFFFFF;
+        int ret = fetchClosestParkingSolution(parkingID, targetNode);
+        if (ret != 0) {
+            //Some Error occured! Signal an error
+            if (updateStruct)
+                updateStruct->updateProgress(ret);
+            return;
+        }
+        //The matching spot we just found
+        NodeInfo parkSpot = parkingGraph.nodeInfo.nodeData[parkingID];
+        //So we have found a matching parking spot! Now calculate the best path from start to the parking node
+        logger->info("Parking Search Step 2: Found Parking spot. Now calculate the path from start to the parking spot...");
+        //We need to get the closest NavNode for the parking node
+        NodeInfo closeByNavNode = fullGraph.getClosestNode(parkSpot, medium);
+        //Search the car-part of the route from start to parking position (NOTE: false parameter ensures that no 'finish' signal will be emitted
+        pathfinder.findRoute(startNode.localID, closeByNavNode.localID, updateStruct, false);
+        if (pathfinder.getErrorCode() < 0) {
+            //Some error occurred during operation ... propagate and exit
+            if (updateStruct)
+                updateStruct->updateProgress(pathfinder.getErrorCode());
+            return;
+        }
+        //Successful! Now fetch the route and store it, also store the edge cost, so we can calculate the total time
+        pathfinder.getRoute(composedRoute);
+        composedRoute.setEdgeType(CARDRIVE);
+        composedTravelTime=pathfinder.getRouteTravelTime();
+        composedTravelDistance=pathfinder.getRouteDistance();
+        //Now all that is left is to calculate the foot-walk from the parking spot to the target
+        logger->info("Parking Search Step 3: Car-Route-to-Parking-Spot calculated. Now get the Footwalk-to-Target...");
+        pathfinder.setMedium(FOOT);
+        //We want to walk as less as possible!
+        bool oldPrio=timeIsPrio;
+        pathfinder.setRoutingPrio(false);
+        //Search the path! We want to access the target by foot now
+        targetNode = fullGraph.getClosestNode(target.getLongitude(), target.getLatitude(), FOOT);
+        pathfinder.findRoute(closeByNavNode.localID, targetNode.localID, NULL, false);
+        //Restore setting
+        pathfinder.setMedium(CAR);
+        pathfinder.setRoutingPrio(oldPrio);
+        if (pathfinder.getErrorCode() != 0) {
+            //Some error occured on that last step! NOOO! Propagate error code and return
+            if (updateStruct)
+                updateStruct->updateProgress(pathfinder.getErrorCode());
+            composedRoute.reset();
+            return;
+        }
+        //This route as well was found, so we can now merge the two graphs and are done!
+        LinearGraph footWalk;
+        pathfinder.getRoute(footWalk);
+        footWalk.setEdgeType(FOOTWALK);
+        //Fetch and add the footwalk path as well
+        composedTravelTime += pathfinder.getRouteTravelTime();
+        composedTravelDistance += pathfinder.getRouteDistance();
+        //Now we got two routes: Start-->ParkingSpot, ParkingSpot-->Target
+        logger->info("Parking Search Step 4: Footwalk calculated as well. Now merge the graphs and return.");
+        composedRoute.merge(footWalk);
+        composedRouteIsReady=true;
+        //Signal that the routing is done!
+        if (updateStruct)
+            updateStruct->updateProgress(100);
         return;
     }
-    //This route as well was found, so we can now merge the two graphs and are done!
-    LinearGraph footWalk;
-    pathfinder.getRoute(footWalk);
-    footWalk.setEdgeType(FOOTWALK);
-    //Fetch and add the footwalk path as well
-    composedTravelTime += pathfinder.getRouteTravelTime();
-    composedTravelDistance += pathfinder.getRouteDistance();
-    //Now we got two routes: Start-->ParkingSpot, ParkingSpot-->Target
-    logger->info("Parking Search Step 4: Footwalk calculated as well. Now merge the graphs and return.");
-    composedRoute.merge(footWalk);
-    composedRouteIsReady=true;
-    //Signal that the routing is done!
-    if (updateStruct)
-        updateStruct->updateProgress(100);
-    return;
+    catch (StopWorkingException &e) {
+        logger->info("Pathfinding aborted.");
+    }
 }
 
 double Navi::getShortestRouteDistance () {
@@ -720,11 +739,11 @@ void Navi::getFullGraph (LinearGraph &graph) {
 void Navi::getShortestRouteGraph(LinearGraph &graph) {
     graph.reset();
     //If we did a parking spot search, we want to return the stored composed graph, otherwise we can just propagate the pathfinder graph
-    if (parkingSearch && composedRouteIsReady) {
+    if (medium==CAR && parkingSearch && composedRouteIsReady) {
         graph = composedRoute;
         return;
     }
-    else if (parkingSearch && !composedRouteIsReady) {
+    else if ((parkingSearch && (medium==CAR)) && !composedRouteIsReady) {
         //Route is not ready yet!
         throw (std::logic_error("getShortestRouteGraph() :: Parking Search done but composed route not ready!"));
         return;

@@ -20,7 +20,6 @@ double NodeInfo::getHaversineDistanceTo (const NodeInfo &targetNode) {
 NodeInfo & NodeInfo::operator= ( const NodeInfo & copy) {
    longitude=copy.longitude;
    latitude=copy.latitude;
-   isChargeStation=copy.isChargeStation;
    osmID=copy.osmID;
    allowsParking=copy.allowsParking;    
    localID=copy.localID;

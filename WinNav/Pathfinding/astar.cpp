@@ -14,14 +14,14 @@ AStar::AStar(NavGraph &navGraph) : graph(navGraph)
 void AStar::setMedium (TravelMedium medium) {
     curMedium=medium;
     //Set maxspeed value according to set travel medium
-    if (curMedium == CAR) {
+    if (medium == CAR) {
         curMaxSpeed=MAXSPEED_CAR_MPS;
     }
-    else if (curMedium==BIKE) {
-        curMaxSpeed==MAXSPEED_BIKE_MPS;
+    else if (medium==BIKE) {
+        curMaxSpeed=MAXSPEED_BIKE_MPS;
     }
     else {
-        curMaxSpeed==MAXSPEED_FOOT_MPS;
+        curMaxSpeed=MAXSPEED_FOOT_MPS;
     }
     return;
 }
@@ -215,6 +215,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
         isMaxRangeSet=false;
     }
     el::Logger* logger = el::Loggers::getLogger("default");
+    logger->info("findRoute: Start Pathfinding now ...");
     //Initialize sets to empty
     closedSet.clear();
     prioQueue.clear();
@@ -248,6 +249,7 @@ void AStar::findRoute (const size_t &start, const size_t &target, CondWait_t *co
                 //Almost done, just have to reconstruct the path, then we're done!
                 condStruct->updateProgress(99);
             }
+            logger->info("FindRoute: Route found. Reconstruct path now...");
             //Build up the shortest path recursively
             constructPath(start, target, NULL);
             //Store the total cost of the calculated path

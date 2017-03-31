@@ -31,8 +31,7 @@ SOURCES +=        main.cpp\
                   GraphInterface/Graph.cpp\
 		  GraphLayer/GraphLayer.cpp\
 		  TestGraph/PODEdge.cpp\
-		  TestGraph/PODNode.cpp\
-		  TestGraph/TestGraph.cpp\
+                  TestGraph/PODNode.cpp\
 		  MapWidget/MapWidget.cpp \
                   #logwriter.cpp \
     #moc_widget.cpp \

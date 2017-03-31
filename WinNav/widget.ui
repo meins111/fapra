@@ -45,12 +45,12 @@
               </item>
               <item>
                <property name="text">
-                <string>Fahrrad</string>
+                <string>Fußgänger</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Fußgänger</string>
+                <string>Fahrrad</string>
                </property>
               </item>
              </widget>
