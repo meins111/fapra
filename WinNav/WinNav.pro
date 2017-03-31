@@ -18,7 +18,7 @@ unix {
     LIBS += -pthread
 }
 
-TARGET = WinNav
+TARGET = ParkMe-Navigator
 TEMPLATE = app
 CONFIG += c++11
 QMAKE_CXXFLAGS += -pthread
